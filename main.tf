@@ -1,4 +1,4 @@
-# ai-talent — full ecosystem deployment
+# talent-network — full ecosystem deployment
 # Deploys internal search (Pyry), federation node (ai-talent-network-mcp),
 # and for Rakettitiede: Minna (federated Slack bot) + Topi (bench Slack bot)
 

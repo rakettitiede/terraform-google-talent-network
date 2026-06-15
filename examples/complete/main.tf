@@ -3,7 +3,7 @@ terraform {
 
   backend "gcs" {
     bucket = "YOUR_PROJECT_ID-terraform-state"
-    prefix = "ai-talent"
+    prefix = "talent-network"
   }
 }
 
@@ -13,8 +13,8 @@ provider "google" {
 }
 
 module "ai_talent" {
-  source  = "rakettitiede/ai-talent/google"
-  version = "~> 4.0"
+  source  = "rakettitiede/talent-network/google"
+  version = "~> 0.0"
 
   # Required
   project_id                   = "your-gcp-project-id"

@@ -81,7 +81,7 @@ gcloud storage buckets create gs://YOUR_PROJECT_ID-terraform-state \
 This deploys three Cloud Run services: mcp-agileday (search backend), Pyry (Slack bot), and your federation node (for cross-company search).
 
 ```bash
-mkdir ai-talent && cd ai-talent
+mkdir talent-network && cd talent-network
 ```
 
 **main.tf:**
@@ -92,7 +92,7 @@ terraform {
 
   backend "gcs" {
     bucket = "YOUR_STATE_BUCKET"
-    prefix = "ai-talent"
+    prefix = "talent-network"
   }
 }
 
@@ -102,7 +102,7 @@ provider "google" {
 }
 
 module "ai_talent" {
-  source  = "rakettitiede/ai-talent/google"
+  source  = "rakettitiede/talent-network/google"
   version = "~> X.0" # Check registry for latest version
 
   project_id                   = "YOUR_PROJECT_ID"

@@ -1,6 +1,6 @@
 # Security Model
 
-This document describes the security architecture and IAM configuration for the ai-talent module.
+This document describes the security architecture and IAM configuration for the talent-network module.
 
 ## Public Cloud Run Services
 

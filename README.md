@@ -1,8 +1,8 @@
-# terraform-google-ai-talent
+# terraform-google-talent-network
 
-[![Terraform Registry](https://img.shields.io/badge/terraform-registry-623CE4?logo=terraform)](https://registry.terraform.io/modules/rakettitiede/ai-talent/google/latest)
+[![Terraform Registry](https://img.shields.io/badge/terraform-registry-623CE4?logo=terraform)](https://registry.terraform.io/modules/rakettitiede/talent-network/google/latest)
 
-Terraform module for deploying the [ai-talent](https://github.com/rakettitiede/ai-talent-platform) ecosystem on GCP.
+Terraform module for deploying the [talent-network](https://github.com/rakettitiede/ai-talent-platform) ecosystem on GCP.
 
 ## Overview
 
@@ -20,7 +20,7 @@ All candidate data is stored in your own GCP environment (Cloud Storage buckets)
 
 ## Quick Start
 
-For full setup instructions including GCP setup, Slack app configuration, and federation onboarding, see the [Partner Onboarding Guide](https://github.com/rakettitiede/terraform-google-ai-talent/blob/main/docs/partner-onboarding.md).
+For full setup instructions including GCP setup, Slack app configuration, and federation onboarding, see the [Partner Onboarding Guide](https://github.com/rakettitiede/terraform-google-talent-network/blob/main/docs/partner-onboarding.md).
 
 **main.tf:**
 ```hcl
@@ -29,7 +29,7 @@ terraform {
 
   backend "gcs" {
     bucket = "YOUR_PROJECT_ID-terraform-state"
-    prefix = "ai-talent"
+    prefix = "talent-network"
   }
 }
 
@@ -39,7 +39,7 @@ provider "google" {
 }
 
 module "ai_talent" {
-  source  = "rakettitiede/ai-talent/google"
+  source  = "rakettitiede/talent-network/google"
   version = "~> X.0" # Check registry for latest version
 
   project_id                   = "YOUR_PROJECT_ID"
