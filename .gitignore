@@ -1,0 +1,14 @@
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.tfvars
+terraform.tfvars
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+crash.log
+crash.*.log
+*.tfplan
+.terraform.lock.hcl
+modules/bootstrap/.terraform.lock.hcl

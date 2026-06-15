@@ -1,0 +1,12 @@
+name: 🏷️ — Auto-triage
+
+on:
+  issues:
+    types: [opened, edited]
+  pull_request:
+    types: [opened, edited, synchronize]
+
+jobs:
+  triage:
+    uses: rakettitiede/.github/.github/workflows/ai-talent-auto-triage.yml@main
+    secrets: inherit
