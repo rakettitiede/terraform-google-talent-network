@@ -1,6 +1,5 @@
 {
   "release-type": "simple",
-  "bootstrap-sha": "f007742",
   "packages": {
     ".": {
       "release-type": "simple",
