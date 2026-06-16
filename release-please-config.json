@@ -7,7 +7,8 @@
       "version-file": "version.txt",
       "changelog-path": "CHANGELOG.md",
       "bump-minor-pre-major": true,
-      "bump-patch-for-minor-pre-major": true
+      "bump-patch-for-minor-pre-major": true,
+      "initial-version": "0.0.1"
     }
   }
 }
