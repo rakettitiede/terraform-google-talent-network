@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.2](https://github.com/rakettitiede/terraform-google-talent-network/compare/v0.0.1...v0.0.2) (2026-06-17)
+
+
+### Features
+
+* add PARTNER_SECRET env var to mcp-agileday and ai-talent-network-mcp ([#9](https://github.com/rakettitiede/terraform-google-talent-network/issues/9)) ([3f17b59](https://github.com/rakettitiede/terraform-google-talent-network/commit/3f17b59346f8956ce35e0189ad1a858ed375945f))
+
 ## 0.0.1 (2026-06-16)
 
 
