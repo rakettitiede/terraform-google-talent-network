@@ -35,8 +35,18 @@ Secrets are stored in Google Secret Manager and mounted as environment variables
 | `pyry-bot-token` | Slack bot token | User (Phase 5) |
 | `pyry-slack-signing-secret` | Slack request verification | User (Phase 5) |
 | `ai-talent-network-mcp-api-key` | API key for federation node | Auto-generated |
+| `partner-secret` | Shared secret for anonymous candidate IDs | Auto-generated |
 
-**Auto-generated secrets** use `random_password` with 64 characters, no special characters. They rotate when the corresponding `image_tag` changes (via `keepers`).
+**Auto-generated secrets** use `random_password` with 64 characters, no special characters. API keys rotate when the corresponding `image_tag` changes (via `keepers`). The `partner-secret` is stable and never rotates automatically — this ensures anonymous candidate IDs remain consistent across deployments.
+
+## Anonymous Candidate IDs
+
+When consultants appear in cross-company search results, their identities are protected using deterministic anonymous IDs. Both `mcp-agileday` and `mcp-talent-network` share a `PARTNER_SECRET` environment variable that's used to generate consistent HMAC-SHA256 hashes of candidate identifiers.
+
+This ensures:
+- The same consultant always gets the same anonymous ID within a partner's federation
+- Anonymous IDs cannot be reversed to reveal the original consultant identity
+- Partners can correlate results across searches without exposing consultant names
 
 ## Data Storage
 
@@ -60,6 +70,7 @@ When a partner joins the Minna federation:
 2. Minna queries all partner nodes and aggregates results
 3. Full consultant details are only visible within the partner's own Slack (via Pyry)
 4. Cross-company searches show skills/experience but not names or contact info
+5. Anonymous candidate IDs are generated using HMAC-SHA256 with the shared `partner-secret`
 
 Rakettitiede does not have access to partner consultant databases — only the anonymized results that partners choose to expose.
 
