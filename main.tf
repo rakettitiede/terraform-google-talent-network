@@ -75,13 +75,23 @@ resource "google_cloud_run_v2_service" "search_mcp" {
           }
         }
       }
+      env {
+        name = "PARTNER_SECRET"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.partner_secret.secret_id
+            version = "latest"
+          }
+        }
+      }
     }
   }
 
   depends_on = [
     google_secret_manager_secret_version.search_mcp_client_id,
     google_secret_manager_secret_version.search_mcp_client_secret,
-    google_secret_manager_secret_version.search_mcp_api_key
+    google_secret_manager_secret_version.search_mcp_api_key,
+    google_secret_manager_secret_version.partner_secret
   ]
 }
 
@@ -165,6 +175,26 @@ resource "google_secret_manager_secret" "search_mcp_api_key" {
 resource "google_secret_manager_secret_version" "search_mcp_api_key" {
   secret      = google_secret_manager_secret.search_mcp_api_key.id
   secret_data = random_password.search_mcp_api_key.result
+}
+
+# Partner secret — shared between mcp-agileday and ai-talent-network-mcp
+# Used for deterministic anonymous candidate IDs (HMAC-SHA256)
+resource "random_password" "partner_secret" {
+  length  = 64
+  special = false
+}
+
+resource "google_secret_manager_secret" "partner_secret" {
+  project   = var.project_id
+  secret_id = "partner-secret"
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "partner_secret" {
+  secret      = google_secret_manager_secret.partner_secret.id
+  secret_data = random_password.partner_secret.result
 }
 
 # ── Pyry (internal Slack bot) ─────────────────────────────────────────────────
@@ -333,13 +363,23 @@ resource "google_cloud_run_v2_service" "network_mcp" {
           }
         }
       }
+      env {
+        name = "PARTNER_SECRET"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.partner_secret.secret_id
+            version = "latest"
+          }
+        }
+      }
     }
   }
 
   depends_on = [
     google_secret_manager_secret_version.network_client_id,
     google_secret_manager_secret_version.network_client_secret,
-    google_secret_manager_secret_version.network_mcp_api_key
+    google_secret_manager_secret_version.network_mcp_api_key,
+    google_secret_manager_secret_version.partner_secret
   ]
 }
 
