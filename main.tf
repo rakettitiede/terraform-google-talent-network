@@ -105,7 +105,7 @@ resource "google_cloud_run_v2_service_iam_member" "search_mcp_public" {
 
 resource "google_storage_bucket" "search_mcp_db" {
   project                     = var.project_id
-  name                        = "${var.project_id}-search_mcp-db"
+  name                        = "${var.project_id}-search-mcp-db"
   location                    = var.region
   uniform_bucket_level_access = true
   versioning { enabled = true }
@@ -131,7 +131,7 @@ resource "google_project_iam_member" "secret_accessor" {
 
 resource "google_secret_manager_secret" "search_mcp_client_id" {
   project   = var.project_id
-  secret_id = "search_mcp-google-client-id"
+  secret_id = "search-mcp-google-client-id"
   replication {
     auto {}
   }
@@ -144,7 +144,7 @@ resource "google_secret_manager_secret_version" "search_mcp_client_id" {
 
 resource "google_secret_manager_secret" "search_mcp_client_secret" {
   project   = var.project_id
-  secret_id = "search_mcp-google-client-secret"
+  secret_id = "search-mcp-google-client-secret"
   replication {
     auto {}
   }

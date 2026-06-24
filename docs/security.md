@@ -54,7 +54,7 @@ Each partner's data stays in their own GCP project:
 
 | Bucket | Contents | Access |
 |--------|----------|--------|
-| `{project}-search_mcp-db` | Consultant profiles, embeddings, search index | Service account only |
+| `{project}-search-mcp-db` | Consultant profiles, embeddings, search index | Service account only |
 | `{project}-talent-network-db` | Anonymized consultant data for federation | Service account only |
 
 Buckets have:
