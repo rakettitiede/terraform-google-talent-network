@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.1.0](https://github.com/rakettitiede/terraform-google-talent-network/compare/v0.0.2...v0.1.0) (2026-06-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* Existing deployments will have these resources recreated. Migrate data from old bucket before applying.
+
+### Features
+
+* security and configuration improvements ([#11](https://github.com/rakettitiede/terraform-google-talent-network/issues/11)) ([b8ab9b3](https://github.com/rakettitiede/terraform-google-talent-network/commit/b8ab9b3aa0d8b26598e1ba67bba62f327ead9684))
+
 ## [0.0.2](https://github.com/rakettitiede/terraform-google-talent-network/compare/v0.0.1...v0.0.2) (2026-06-17)
 
 
