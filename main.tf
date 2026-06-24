@@ -39,9 +39,10 @@ resource "google_artifact_registry_repository" "search_mcp" {
 }
 
 resource "google_cloud_run_v2_service" "search_mcp" {
-  project  = var.project_id
-  name     = var.service_names.search_mcp
-  location = var.region
+  project             = var.project_id
+  name                = var.service_names.search_mcp
+  location            = var.region
+  deletion_protection = false
 
   template {
     service_account                  = google_service_account.runtime.email
@@ -247,9 +248,10 @@ resource "google_artifact_registry_repository" "pyry" {
 }
 
 resource "google_cloud_run_v2_service" "pyry" {
-  project  = var.project_id
-  name     = var.service_names.pyry
-  location = var.region
+  project             = var.project_id
+  name                = var.service_names.pyry
+  location            = var.region
+  deletion_protection = false
 
   template {
     service_account                  = google_service_account.runtime.email
@@ -364,9 +366,10 @@ resource "google_artifact_registry_repository" "network_mcp" {
 }
 
 resource "google_cloud_run_v2_service" "network_mcp" {
-  project  = var.project_id
-  name     = var.service_names.network_mcp
-  location = var.region
+  project             = var.project_id
+  name                = var.service_names.network_mcp
+  location            = var.region
+  deletion_protection = false
 
   template {
     service_account                  = google_service_account.runtime.email
@@ -549,10 +552,11 @@ resource "google_artifact_registry_repository" "minna" {
 }
 
 resource "google_cloud_run_v2_service" "minna" {
-  count    = local.is_rakettitiede ? 1 : 0
-  project  = var.project_id
-  name     = var.service_names.minna
-  location = var.region
+  count               = local.is_rakettitiede ? 1 : 0
+  project             = var.project_id
+  name                = var.service_names.minna
+  location            = var.region
+  deletion_protection = false
 
   template {
     service_account                  = google_service_account.runtime.email
@@ -727,10 +731,11 @@ resource "google_artifact_registry_repository" "bench_mcp" {
 }
 
 resource "google_cloud_run_v2_service" "bench_mcp" {
-  count    = local.is_rakettitiede ? 1 : 0
-  project  = var.project_id
-  name     = var.service_names.bench_mcp
-  location = var.region
+  count               = local.is_rakettitiede ? 1 : 0
+  project             = var.project_id
+  name                = var.service_names.bench_mcp
+  location            = var.region
+  deletion_protection = false
 
   template {
     service_account                  = google_service_account.runtime.email
@@ -783,10 +788,11 @@ resource "google_artifact_registry_repository" "topi" {
 }
 
 resource "google_cloud_run_v2_service" "topi" {
-  count    = local.is_rakettitiede ? 1 : 0
-  project  = var.project_id
-  name     = var.service_names.topi
-  location = var.region
+  count               = local.is_rakettitiede ? 1 : 0
+  project             = var.project_id
+  name                = var.service_names.topi
+  location            = var.region
+  deletion_protection = false
 
   template {
     service_account                  = google_service_account.runtime.email
