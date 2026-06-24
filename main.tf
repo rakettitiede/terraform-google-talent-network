@@ -10,20 +10,32 @@ locals {
 
 resource "google_artifact_registry_repository" "search_mcp" {
   project       = var.project_id
-  repository_id = "mcp-agileday"
+  repository_id = var.service_names.search_mcp
   format        = "DOCKER"
   location      = var.region
 }
 
 resource "google_cloud_run_v2_service" "search_mcp" {
   project  = var.project_id
-  name     = "mcp-agileday"
+  name     = var.service_names.search_mcp
   location = var.region
 
   template {
-    service_account = var.service_account
+    service_account                  = var.service_account
+    max_instance_request_concurrency = 80
+    scaling {
+      min_instance_count = var.cloud_run_min_instances
+      max_instance_count = var.cloud_run_max_instances
+    }
     containers {
-      image = "${var.region}-docker.pkg.dev/${var.artifact_registry_project_id}/mcp-agileday/mcp-agileday:${var.image_tags.search_mcp}"
+      image = "${var.region}-docker.pkg.dev/${var.artifact_registry_project_id}/${var.service_names.search_mcp}/${var.service_names.search_mcp}:${var.image_tags.search_mcp}"
+      resources {
+        cpu_idle = true
+        limits = {
+          cpu    = var.cloud_run_cpu
+          memory = var.cloud_run_memory
+        }
+      }
       env {
         name  = "NODE_ENV"
         value = "production"
@@ -218,20 +230,32 @@ resource "google_secret_manager_secret_version" "partner_secret" {
 
 resource "google_artifact_registry_repository" "pyry" {
   project       = var.project_id
-  repository_id = "ai-talent-search-pyry"
+  repository_id = var.service_names.pyry
   format        = "DOCKER"
   location      = var.region
 }
 
 resource "google_cloud_run_v2_service" "pyry" {
   project  = var.project_id
-  name     = "ai-talent-search-pyry"
+  name     = var.service_names.pyry
   location = var.region
 
   template {
-    service_account = var.service_account
+    service_account                  = var.service_account
+    max_instance_request_concurrency = 80
+    scaling {
+      min_instance_count = var.cloud_run_min_instances
+      max_instance_count = var.cloud_run_max_instances
+    }
     containers {
-      image = "${var.region}-docker.pkg.dev/${var.artifact_registry_project_id}/ai-talent-search-pyry/ai-talent-search-pyry:${var.image_tags.pyry}"
+      image = "${var.region}-docker.pkg.dev/${var.artifact_registry_project_id}/${var.service_names.pyry}/${var.service_names.pyry}:${var.image_tags.pyry}"
+      resources {
+        cpu_idle = true
+        limits = {
+          cpu    = var.cloud_run_cpu
+          memory = var.cloud_run_memory
+        }
+      }
       env {
         name  = "NODE_ENV"
         value = "production"
@@ -323,20 +347,32 @@ resource "google_secret_manager_secret" "pyry_signing_secret" {
 
 resource "google_artifact_registry_repository" "network_mcp" {
   project       = var.project_id
-  repository_id = "mcp-talent-network"
+  repository_id = var.service_names.network_mcp
   format        = "DOCKER"
   location      = var.region
 }
 
 resource "google_cloud_run_v2_service" "network_mcp" {
   project  = var.project_id
-  name     = "mcp-talent-network"
+  name     = var.service_names.network_mcp
   location = var.region
 
   template {
-    service_account = var.service_account
+    service_account                  = var.service_account
+    max_instance_request_concurrency = 80
+    scaling {
+      min_instance_count = var.cloud_run_min_instances
+      max_instance_count = var.cloud_run_max_instances
+    }
     containers {
-      image = "${var.region}-docker.pkg.dev/${var.artifact_registry_project_id}/mcp-talent-network/mcp-talent-network:${var.image_tags.network_mcp}"
+      image = "${var.region}-docker.pkg.dev/${var.artifact_registry_project_id}/${var.service_names.network_mcp}/${var.service_names.network_mcp}:${var.image_tags.network_mcp}"
+      resources {
+        cpu_idle = true
+        limits = {
+          cpu    = var.cloud_run_cpu
+          memory = var.cloud_run_memory
+        }
+      }
       env {
         name  = "NODE_ENV"
         value = "production"
@@ -496,7 +532,7 @@ resource "google_secret_manager_secret_version" "network_mcp_api_key" {
 resource "google_artifact_registry_repository" "minna" {
   count         = local.is_rakettitiede ? 1 : 0
   project       = var.project_id
-  repository_id = "ai-talent-network-minna"
+  repository_id = var.service_names.minna
   format        = "DOCKER"
   location      = var.region
 }
@@ -504,13 +540,25 @@ resource "google_artifact_registry_repository" "minna" {
 resource "google_cloud_run_v2_service" "minna" {
   count    = local.is_rakettitiede ? 1 : 0
   project  = var.project_id
-  name     = "ai-talent-network-minna"
+  name     = var.service_names.minna
   location = var.region
 
   template {
-    service_account = var.service_account
+    service_account                  = var.service_account
+    max_instance_request_concurrency = 80
+    scaling {
+      min_instance_count = var.cloud_run_min_instances
+      max_instance_count = var.cloud_run_max_instances
+    }
     containers {
-      image = "${var.region}-docker.pkg.dev/${var.artifact_registry_project_id}/ai-talent-network-minna/ai-talent-network-minna:${var.image_tags.minna}"
+      image = "${var.region}-docker.pkg.dev/${var.artifact_registry_project_id}/${var.service_names.minna}/${var.service_names.minna}:${var.image_tags.minna}"
+      resources {
+        cpu_idle = true
+        limits = {
+          cpu    = var.cloud_run_cpu
+          memory = var.cloud_run_memory
+        }
+      }
       env {
         name  = "NODE_ENV"
         value = "production"
@@ -662,7 +710,7 @@ resource "google_secret_manager_secret_version" "minna_mcp_api_urls" {
 resource "google_artifact_registry_repository" "bench_mcp" {
   count         = local.is_rakettitiede ? 1 : 0
   project       = var.project_id
-  repository_id = "ai-talent-bench-mcp"
+  repository_id = var.service_names.bench_mcp
   format        = "DOCKER"
   location      = var.region
 }
@@ -670,13 +718,25 @@ resource "google_artifact_registry_repository" "bench_mcp" {
 resource "google_cloud_run_v2_service" "bench_mcp" {
   count    = local.is_rakettitiede ? 1 : 0
   project  = var.project_id
-  name     = "ai-talent-bench-mcp"
+  name     = var.service_names.bench_mcp
   location = var.region
 
   template {
-    service_account = var.service_account
+    service_account                  = var.service_account
+    max_instance_request_concurrency = 80
+    scaling {
+      min_instance_count = var.cloud_run_min_instances
+      max_instance_count = var.cloud_run_max_instances
+    }
     containers {
-      image = "${var.region}-docker.pkg.dev/${var.artifact_registry_project_id}/ai-talent-bench-mcp/ai-talent-bench-mcp:${var.image_tags.bench_mcp}"
+      image = "${var.region}-docker.pkg.dev/${var.artifact_registry_project_id}/${var.service_names.bench_mcp}/${var.service_names.bench_mcp}:${var.image_tags.bench_mcp}"
+      resources {
+        cpu_idle = true
+        limits = {
+          cpu    = var.cloud_run_cpu
+          memory = var.cloud_run_memory
+        }
+      }
       env {
         name  = "NODE_ENV"
         value = "production"
@@ -706,7 +766,7 @@ resource "google_cloud_run_v2_service_iam_member" "bench_mcp_public" {
 resource "google_artifact_registry_repository" "topi" {
   count         = local.is_rakettitiede ? 1 : 0
   project       = var.project_id
-  repository_id = "ai-talent-bench-topi"
+  repository_id = var.service_names.topi
   format        = "DOCKER"
   location      = var.region
 }
@@ -714,13 +774,25 @@ resource "google_artifact_registry_repository" "topi" {
 resource "google_cloud_run_v2_service" "topi" {
   count    = local.is_rakettitiede ? 1 : 0
   project  = var.project_id
-  name     = "ai-talent-bench-topi"
+  name     = var.service_names.topi
   location = var.region
 
   template {
-    service_account = var.service_account
+    service_account                  = var.service_account
+    max_instance_request_concurrency = 80
+    scaling {
+      min_instance_count = var.cloud_run_min_instances
+      max_instance_count = var.cloud_run_max_instances
+    }
     containers {
-      image = "${var.region}-docker.pkg.dev/${var.artifact_registry_project_id}/ai-talent-bench-topi/ai-talent-bench-topi:${var.image_tags.topi}"
+      image = "${var.region}-docker.pkg.dev/${var.artifact_registry_project_id}/${var.service_names.topi}/${var.service_names.topi}:${var.image_tags.topi}"
+      resources {
+        cpu_idle = true
+        limits = {
+          cpu    = var.cloud_run_cpu
+          memory = var.cloud_run_memory
+        }
+      }
       env {
         name  = "NODE_ENV"
         value = "production"

@@ -36,6 +36,19 @@ module "ai_talent" {
     network_mcp = "v0.9.4"
   }
 
+  # Optional: override Cloud Run resource limits (applies to all services)
+  cloud_run_cpu           = "2"
+  cloud_run_memory        = "1Gi"
+  cloud_run_min_instances = 1
+  cloud_run_max_instances = 20
+
+  # Optional: override service names (useful for multi-environment deployments)
+  # service_names = {
+  #   search_mcp  = "prod-mcp-agileday"
+  #   pyry        = "prod-pyry"
+  #   network_mcp = "prod-mcp-talent-network"
+  # }
+
   # Optional: self-host images in your own Artifact Registry (overrides the default above)
   # artifact_registry_project_id = "your-artifact-registry-project"
 

@@ -78,3 +78,40 @@ variable "partner_mcp_urls" {
   type        = map(string)
   default     = {}
 }
+
+variable "service_names" {
+  description = "Override Cloud Run service and Artifact Registry repository names. Defaults match the original hardcoded names."
+  type = object({
+    search_mcp  = optional(string, "mcp-agileday")
+    pyry        = optional(string, "ai-talent-search-pyry")
+    network_mcp = optional(string, "mcp-talent-network")
+    minna       = optional(string, "ai-talent-network-minna")
+    bench_mcp   = optional(string, "ai-talent-bench-mcp")
+    topi        = optional(string, "ai-talent-bench-topi")
+  })
+  default = {}
+}
+
+variable "cloud_run_cpu" {
+  description = "CPU allocation for all Cloud Run services"
+  type        = string
+  default     = "1"
+}
+
+variable "cloud_run_memory" {
+  description = "Memory allocation for all Cloud Run services"
+  type        = string
+  default     = "512Mi"
+}
+
+variable "cloud_run_min_instances" {
+  description = "Minimum instances for all Cloud Run services (0 = scale to zero)"
+  type        = number
+  default     = 0
+}
+
+variable "cloud_run_max_instances" {
+  description = "Maximum instances for all Cloud Run services"
+  type        = number
+  default     = 10
+}
