@@ -73,7 +73,9 @@ Terraform stores infrastructure state remotely in GCS. This enables team collabo
 
 ```bash
 gcloud storage buckets create gs://YOUR_PROJECT_ID-terraform-state \
-  --location=europe-north1 --uniform-bucket-level-access
+  --location=europe-north1 \
+  --uniform-bucket-level-access \
+  --pap
 ```
 
 ---
