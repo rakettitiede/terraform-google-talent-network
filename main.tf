@@ -134,7 +134,11 @@ resource "google_secret_manager_secret" "search_mcp_client_id" {
   project   = var.project_id
   secret_id = "search-mcp-google-client-id"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -147,7 +151,11 @@ resource "google_secret_manager_secret" "search_mcp_client_secret" {
   project   = var.project_id
   secret_id = "search-mcp-google-client-secret"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -169,7 +177,11 @@ resource "google_secret_manager_secret" "search_mcp_api_key" {
   project   = var.project_id
   secret_id = "ai-talent-search-mcp-api-key"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -189,7 +201,11 @@ resource "google_secret_manager_secret" "partner_secret" {
   project   = var.project_id
   secret_id = "partner-secret"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -283,7 +299,11 @@ resource "google_secret_manager_secret" "pyry_bot_token" {
   project   = var.project_id
   secret_id = "pyry-bot-token"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -291,7 +311,11 @@ resource "google_secret_manager_secret" "pyry_signing_secret" {
   project   = var.project_id
   secret_id = "pyry-slack-signing-secret"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -411,7 +435,11 @@ resource "google_secret_manager_secret" "network_client_id" {
   project   = var.project_id
   secret_id = "talent-network-google-client-id"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -424,7 +452,11 @@ resource "google_secret_manager_secret" "network_client_secret" {
   project   = var.project_id
   secret_id = "talent-network-google-client-secret"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -446,7 +478,11 @@ resource "google_secret_manager_secret" "network_mcp_api_key" {
   project   = var.project_id
   secret_id = "ai-talent-network-mcp-api-key"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -564,7 +600,11 @@ resource "google_secret_manager_secret" "minna_bot_token" {
   project   = var.project_id
   secret_id = "minna-bot-token"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -574,7 +614,11 @@ resource "google_secret_manager_secret" "minna_bot_tokens" {
   project   = var.project_id
   secret_id = "minna-bot-tokens"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -583,7 +627,11 @@ resource "google_secret_manager_secret" "minna_signing_secret" {
   project   = var.project_id
   secret_id = "minna-slack-signing-secret"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -592,7 +640,11 @@ resource "google_secret_manager_secret" "minna_mcp_api_urls" {
   project   = var.project_id
   secret_id = "minna-mcp-api-urls"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -741,7 +793,11 @@ resource "google_secret_manager_secret" "topi_bot_token" {
   project   = var.project_id
   secret_id = "topi-bot-token"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -750,7 +806,11 @@ resource "google_secret_manager_secret" "topi_signing_secret" {
   project   = var.project_id
   secret_id = "topi-slack-signing-secret"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -769,7 +829,11 @@ resource "google_secret_manager_secret" "bench_mcp_api_key" {
   project   = var.project_id
   secret_id = "ai-talent-bench-mcp-api-key"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 

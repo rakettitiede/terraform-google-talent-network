@@ -29,6 +29,8 @@ All Cloud Run services are deployed with `allUsers` as an invoker. This is inten
 
 Secrets are stored in Google Secret Manager and mounted as environment variables at runtime. Cloud Run's service account has `secretmanager.secretAccessor` role.
 
+**Regional replication:** All secrets use `user_managed` replication with the configured `var.region` as the single replica location. This ensures secrets stay within the EU (when using EU regions) and are not automatically replicated globally.
+
 | Secret | Purpose | Who Sets It |
 |--------|---------|-------------|
 | `ai-talent-search-mcp-api-key` | API key for mcp-agileday | Auto-generated |
