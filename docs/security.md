@@ -29,6 +29,8 @@ All Cloud Run services are deployed with `allUsers` as an invoker. This is inten
 
 Secrets are stored in Google Secret Manager and mounted as environment variables at runtime. Cloud Run's service account has `secretmanager.secretAccessor` role.
 
+**Regional replication:** All secrets use `user_managed` replication with the configured `var.region` as the single replica location. This ensures secrets stay within the EU (when using EU regions) and are not automatically replicated globally.
+
 | Secret | Purpose | Who Sets It |
 |--------|---------|-------------|
 | `ai-talent-search-mcp-api-key` | API key for mcp-agileday | Auto-generated |
@@ -54,11 +56,12 @@ Each partner's data stays in their own GCP project:
 
 | Bucket | Contents | Access |
 |--------|----------|--------|
-| `{project}-search_mcp-db` | Consultant profiles, embeddings, search index | Service account only |
+| `{project}-search-mcp-db` | Consultant profiles, embeddings, search index | Service account only |
 | `{project}-talent-network-db` | Anonymized consultant data for federation | Service account only |
 
 Buckets have:
 - Uniform bucket-level access (no ACLs)
+- Public access prevention enforced
 - Versioning enabled
 - Service account has `storage.objectAdmin`
 
@@ -74,19 +77,33 @@ When a partner joins the Minna federation:
 
 Rakettitiede does not have access to partner consultant databases — only the anonymized results that partners choose to expose.
 
-## IAM Roles Required
+## IAM Roles
 
-The service account needs these roles:
+The module uses two service accounts with separated concerns:
+
+### Terraform Deployer (provided by user)
+
+Used only during `terraform apply` to create and manage resources:
 
 | Role | Purpose |
 |------|---------|
 | `roles/run.admin` | Deploy and manage Cloud Run services |
-| `roles/artifactregistry.reader` | Pull container images |
+| `roles/artifactregistry.admin` | Create Artifact Registry repositories |
 | `roles/storage.admin` | Create and manage GCS buckets |
-| `roles/secretmanager.admin` | Create secrets (Terraform) |
-| `roles/secretmanager.secretAccessor` | Read secrets at runtime (Cloud Run) |
+| `roles/secretmanager.admin` | Create and manage secrets |
+| `roles/iam.serviceAccountAdmin` | Create runtime service account |
+
+### Runtime (created by module)
+
+The module creates a `talent-network-runtime` service account with minimal permissions for Cloud Run services:
+
+| Role | Purpose |
+|------|---------|
+| `roles/secretmanager.secretAccessor` | Read secrets at runtime |
 | `roles/aiplatform.user` | Access Vertex AI for embeddings/LLM |
-| `roles/iam.serviceAccountUser` | Allow Cloud Run to use the service account |
+| `roles/storage.objectAdmin` | Read/write data buckets (scoped per bucket) |
+
+This separation reduces blast radius — if a Cloud Run service is compromised, the attacker only has read access to secrets and data buckets, not admin access to create/delete resources.
 
 ## Recommendations
 

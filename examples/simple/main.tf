@@ -17,7 +17,6 @@ module "ai_talent" {
   version = "~> 0.0"
 
   project_id        = "your-gcp-project-id"
-  service_account   = "terraform-deployer@your-gcp-project-id.iam.gserviceaccount.com"
   partner           = "your-company"
   agileday_base_url = "https://api.agileday.io"
 

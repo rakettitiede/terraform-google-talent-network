@@ -27,3 +27,8 @@ output "topi_url" {
   description = "ai-talent-bench-topi service URL (Rakettitiede only)"
   value       = length(google_cloud_run_v2_service.topi) > 0 ? google_cloud_run_v2_service.topi[0].uri : null
 }
+
+output "runtime_service_account" {
+  description = "Runtime service account email used by Cloud Run services"
+  value       = google_service_account.runtime.email
+}

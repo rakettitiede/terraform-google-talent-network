@@ -6,24 +6,60 @@ locals {
   is_rakettitiede = var.partner == "rakettitiede"
 }
 
+# ── Runtime service account ──────────────────────────────────────────────────
+# Minimal permissions for Cloud Run services. Separate from terraform-deployer
+# to reduce blast radius if a service is compromised.
+
+resource "google_service_account" "runtime" {
+  project      = var.project_id
+  account_id   = "talent-network-runtime"
+  display_name = "Talent Network Runtime"
+  description  = "Service account for Cloud Run services with minimal permissions"
+}
+
+resource "google_project_iam_member" "runtime_secret_accessor" {
+  project = var.project_id
+  role    = "roles/secretmanager.secretAccessor"
+  member  = "serviceAccount:${google_service_account.runtime.email}"
+}
+
+resource "google_project_iam_member" "runtime_vertex_user" {
+  project = var.project_id
+  role    = "roles/aiplatform.user"
+  member  = "serviceAccount:${google_service_account.runtime.email}"
+}
+
 # ── Internal search ──────────────────────────────────────────────────────────
 
 resource "google_artifact_registry_repository" "search_mcp" {
   project       = var.project_id
-  repository_id = "mcp-agileday"
+  repository_id = var.service_names.search_mcp
   format        = "DOCKER"
   location      = var.region
 }
 
 resource "google_cloud_run_v2_service" "search_mcp" {
-  project  = var.project_id
-  name     = "mcp-agileday"
-  location = var.region
+  project             = var.project_id
+  name                = var.service_names.search_mcp
+  location            = var.region
+  deletion_protection = false
 
   template {
-    service_account = var.service_account
+    service_account                  = google_service_account.runtime.email
+    max_instance_request_concurrency = 80
+    scaling {
+      min_instance_count = var.cloud_run_min_instances
+      max_instance_count = var.cloud_run_max_instances
+    }
     containers {
-      image = "${var.region}-docker.pkg.dev/${var.artifact_registry_project_id}/mcp-agileday/mcp-agileday:${var.image_tags.search_mcp}"
+      image = "${var.region}-docker.pkg.dev/${var.artifact_registry_project_id}/${var.service_names.search_mcp}/${var.service_names.search_mcp}:${var.image_tags.search_mcp}"
+      resources {
+        cpu_idle = true
+        limits = {
+          cpu    = var.cloud_run_cpu
+          memory = var.cloud_run_memory
+        }
+      }
       env {
         name  = "NODE_ENV"
         value = "production"
@@ -105,35 +141,28 @@ resource "google_cloud_run_v2_service_iam_member" "search_mcp_public" {
 
 resource "google_storage_bucket" "search_mcp_db" {
   project                     = var.project_id
-  name                        = "${var.project_id}-search_mcp-db"
+  name                        = "${var.project_id}-search-mcp-db"
   location                    = var.region
   uniform_bucket_level_access = true
+  public_access_prevention    = "enforced"
   versioning { enabled = true }
 }
 
 resource "google_storage_bucket_iam_member" "search_mcp_db" {
   bucket = google_storage_bucket.search_mcp_db.name
   role   = "roles/storage.objectAdmin"
-  member = "serviceAccount:${var.service_account}"
-}
-
-resource "google_project_iam_member" "search_mcp_vertex" {
-  project = var.project_id
-  role    = "roles/aiplatform.user"
-  member  = "serviceAccount:${var.service_account}"
-}
-
-resource "google_project_iam_member" "secret_accessor" {
-  project = var.project_id
-  role    = "roles/secretmanager.secretAccessor"
-  member  = "serviceAccount:${var.service_account}"
+  member = "serviceAccount:${google_service_account.runtime.email}"
 }
 
 resource "google_secret_manager_secret" "search_mcp_client_id" {
   project   = var.project_id
-  secret_id = "search_mcp-google-client-id"
+  secret_id = "search-mcp-google-client-id"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -144,9 +173,13 @@ resource "google_secret_manager_secret_version" "search_mcp_client_id" {
 
 resource "google_secret_manager_secret" "search_mcp_client_secret" {
   project   = var.project_id
-  secret_id = "search_mcp-google-client-secret"
+  secret_id = "search-mcp-google-client-secret"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -168,7 +201,11 @@ resource "google_secret_manager_secret" "search_mcp_api_key" {
   project   = var.project_id
   secret_id = "ai-talent-search-mcp-api-key"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -188,7 +225,11 @@ resource "google_secret_manager_secret" "partner_secret" {
   project   = var.project_id
   secret_id = "partner-secret"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -201,20 +242,33 @@ resource "google_secret_manager_secret_version" "partner_secret" {
 
 resource "google_artifact_registry_repository" "pyry" {
   project       = var.project_id
-  repository_id = "ai-talent-search-pyry"
+  repository_id = var.service_names.pyry
   format        = "DOCKER"
   location      = var.region
 }
 
 resource "google_cloud_run_v2_service" "pyry" {
-  project  = var.project_id
-  name     = "ai-talent-search-pyry"
-  location = var.region
+  project             = var.project_id
+  name                = var.service_names.pyry
+  location            = var.region
+  deletion_protection = false
 
   template {
-    service_account = var.service_account
+    service_account                  = google_service_account.runtime.email
+    max_instance_request_concurrency = 80
+    scaling {
+      min_instance_count = var.cloud_run_min_instances
+      max_instance_count = var.cloud_run_max_instances
+    }
     containers {
-      image = "${var.region}-docker.pkg.dev/${var.artifact_registry_project_id}/ai-talent-search-pyry/ai-talent-search-pyry:${var.image_tags.pyry}"
+      image = "${var.region}-docker.pkg.dev/${var.artifact_registry_project_id}/${var.service_names.pyry}/${var.service_names.pyry}:${var.image_tags.pyry}"
+      resources {
+        cpu_idle = true
+        limits = {
+          cpu    = var.cloud_run_cpu
+          memory = var.cloud_run_memory
+        }
+      }
       env {
         name  = "NODE_ENV"
         value = "production"
@@ -275,14 +329,18 @@ resource "google_cloud_run_v2_service_iam_member" "pyry_invokes_search_mcp" {
   name     = google_cloud_run_v2_service.search_mcp.name
   location = var.region
   role     = "roles/run.invoker"
-  member   = "serviceAccount:${var.service_account}"
+  member   = "serviceAccount:${google_service_account.runtime.email}"
 }
 
 resource "google_secret_manager_secret" "pyry_bot_token" {
   project   = var.project_id
   secret_id = "pyry-bot-token"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -290,7 +348,11 @@ resource "google_secret_manager_secret" "pyry_signing_secret" {
   project   = var.project_id
   secret_id = "pyry-slack-signing-secret"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -298,20 +360,33 @@ resource "google_secret_manager_secret" "pyry_signing_secret" {
 
 resource "google_artifact_registry_repository" "network_mcp" {
   project       = var.project_id
-  repository_id = "mcp-talent-network"
+  repository_id = var.service_names.network_mcp
   format        = "DOCKER"
   location      = var.region
 }
 
 resource "google_cloud_run_v2_service" "network_mcp" {
-  project  = var.project_id
-  name     = "mcp-talent-network"
-  location = var.region
+  project             = var.project_id
+  name                = var.service_names.network_mcp
+  location            = var.region
+  deletion_protection = false
 
   template {
-    service_account = var.service_account
+    service_account                  = google_service_account.runtime.email
+    max_instance_request_concurrency = 80
+    scaling {
+      min_instance_count = var.cloud_run_min_instances
+      max_instance_count = var.cloud_run_max_instances
+    }
     containers {
-      image = "${var.region}-docker.pkg.dev/${var.artifact_registry_project_id}/mcp-talent-network/mcp-talent-network:${var.image_tags.network_mcp}"
+      image = "${var.region}-docker.pkg.dev/${var.artifact_registry_project_id}/${var.service_names.network_mcp}/${var.service_names.network_mcp}:${var.image_tags.network_mcp}"
+      resources {
+        cpu_idle = true
+        limits = {
+          cpu    = var.cloud_run_cpu
+          memory = var.cloud_run_memory
+        }
+      }
       env {
         name  = "NODE_ENV"
         value = "production"
@@ -396,20 +471,25 @@ resource "google_storage_bucket" "network_db" {
   name                        = "${var.project_id}-talent-network-db"
   location                    = var.region
   uniform_bucket_level_access = true
+  public_access_prevention    = "enforced"
   versioning { enabled = true }
 }
 
 resource "google_storage_bucket_iam_member" "network_db" {
   bucket = google_storage_bucket.network_db.name
   role   = "roles/storage.objectAdmin"
-  member = "serviceAccount:${var.service_account}"
+  member = "serviceAccount:${google_service_account.runtime.email}"
 }
 
 resource "google_secret_manager_secret" "network_client_id" {
   project   = var.project_id
   secret_id = "talent-network-google-client-id"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -422,7 +502,11 @@ resource "google_secret_manager_secret" "network_client_secret" {
   project   = var.project_id
   secret_id = "talent-network-google-client-secret"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -444,7 +528,11 @@ resource "google_secret_manager_secret" "network_mcp_api_key" {
   project   = var.project_id
   secret_id = "ai-talent-network-mcp-api-key"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -458,21 +546,34 @@ resource "google_secret_manager_secret_version" "network_mcp_api_key" {
 resource "google_artifact_registry_repository" "minna" {
   count         = local.is_rakettitiede ? 1 : 0
   project       = var.project_id
-  repository_id = "ai-talent-network-minna"
+  repository_id = var.service_names.minna
   format        = "DOCKER"
   location      = var.region
 }
 
 resource "google_cloud_run_v2_service" "minna" {
-  count    = local.is_rakettitiede ? 1 : 0
-  project  = var.project_id
-  name     = "ai-talent-network-minna"
-  location = var.region
+  count               = local.is_rakettitiede ? 1 : 0
+  project             = var.project_id
+  name                = var.service_names.minna
+  location            = var.region
+  deletion_protection = false
 
   template {
-    service_account = var.service_account
+    service_account                  = google_service_account.runtime.email
+    max_instance_request_concurrency = 80
+    scaling {
+      min_instance_count = var.cloud_run_min_instances
+      max_instance_count = var.cloud_run_max_instances
+    }
     containers {
-      image = "${var.region}-docker.pkg.dev/${var.artifact_registry_project_id}/ai-talent-network-minna/ai-talent-network-minna:${var.image_tags.minna}"
+      image = "${var.region}-docker.pkg.dev/${var.artifact_registry_project_id}/${var.service_names.minna}/${var.service_names.minna}:${var.image_tags.minna}"
+      resources {
+        cpu_idle = true
+        limits = {
+          cpu    = var.cloud_run_cpu
+          memory = var.cloud_run_memory
+        }
+      }
       env {
         name  = "NODE_ENV"
         value = "production"
@@ -554,7 +655,7 @@ resource "google_cloud_run_v2_service_iam_member" "minna_invokes_network" {
   name     = google_cloud_run_v2_service.network_mcp.name
   location = var.region
   role     = "roles/run.invoker"
-  member   = "serviceAccount:${var.service_account}"
+  member   = "serviceAccount:${google_service_account.runtime.email}"
 }
 
 resource "google_secret_manager_secret" "minna_bot_token" {
@@ -562,7 +663,11 @@ resource "google_secret_manager_secret" "minna_bot_token" {
   project   = var.project_id
   secret_id = "minna-bot-token"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -572,7 +677,11 @@ resource "google_secret_manager_secret" "minna_bot_tokens" {
   project   = var.project_id
   secret_id = "minna-bot-tokens"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -581,7 +690,11 @@ resource "google_secret_manager_secret" "minna_signing_secret" {
   project   = var.project_id
   secret_id = "minna-slack-signing-secret"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -590,7 +703,11 @@ resource "google_secret_manager_secret" "minna_mcp_api_urls" {
   project   = var.project_id
   secret_id = "minna-mcp-api-urls"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -608,21 +725,34 @@ resource "google_secret_manager_secret_version" "minna_mcp_api_urls" {
 resource "google_artifact_registry_repository" "bench_mcp" {
   count         = local.is_rakettitiede ? 1 : 0
   project       = var.project_id
-  repository_id = "ai-talent-bench-mcp"
+  repository_id = var.service_names.bench_mcp
   format        = "DOCKER"
   location      = var.region
 }
 
 resource "google_cloud_run_v2_service" "bench_mcp" {
-  count    = local.is_rakettitiede ? 1 : 0
-  project  = var.project_id
-  name     = "ai-talent-bench-mcp"
-  location = var.region
+  count               = local.is_rakettitiede ? 1 : 0
+  project             = var.project_id
+  name                = var.service_names.bench_mcp
+  location            = var.region
+  deletion_protection = false
 
   template {
-    service_account = var.service_account
+    service_account                  = google_service_account.runtime.email
+    max_instance_request_concurrency = 80
+    scaling {
+      min_instance_count = var.cloud_run_min_instances
+      max_instance_count = var.cloud_run_max_instances
+    }
     containers {
-      image = "${var.region}-docker.pkg.dev/${var.artifact_registry_project_id}/ai-talent-bench-mcp/ai-talent-bench-mcp:${var.image_tags.bench_mcp}"
+      image = "${var.region}-docker.pkg.dev/${var.artifact_registry_project_id}/${var.service_names.bench_mcp}/${var.service_names.bench_mcp}:${var.image_tags.bench_mcp}"
+      resources {
+        cpu_idle = true
+        limits = {
+          cpu    = var.cloud_run_cpu
+          memory = var.cloud_run_memory
+        }
+      }
       env {
         name  = "NODE_ENV"
         value = "production"
@@ -652,21 +782,34 @@ resource "google_cloud_run_v2_service_iam_member" "bench_mcp_public" {
 resource "google_artifact_registry_repository" "topi" {
   count         = local.is_rakettitiede ? 1 : 0
   project       = var.project_id
-  repository_id = "ai-talent-bench-topi"
+  repository_id = var.service_names.topi
   format        = "DOCKER"
   location      = var.region
 }
 
 resource "google_cloud_run_v2_service" "topi" {
-  count    = local.is_rakettitiede ? 1 : 0
-  project  = var.project_id
-  name     = "ai-talent-bench-topi"
-  location = var.region
+  count               = local.is_rakettitiede ? 1 : 0
+  project             = var.project_id
+  name                = var.service_names.topi
+  location            = var.region
+  deletion_protection = false
 
   template {
-    service_account = var.service_account
+    service_account                  = google_service_account.runtime.email
+    max_instance_request_concurrency = 80
+    scaling {
+      min_instance_count = var.cloud_run_min_instances
+      max_instance_count = var.cloud_run_max_instances
+    }
     containers {
-      image = "${var.region}-docker.pkg.dev/${var.artifact_registry_project_id}/ai-talent-bench-topi/ai-talent-bench-topi:${var.image_tags.topi}"
+      image = "${var.region}-docker.pkg.dev/${var.artifact_registry_project_id}/${var.service_names.topi}/${var.service_names.topi}:${var.image_tags.topi}"
+      resources {
+        cpu_idle = true
+        limits = {
+          cpu    = var.cloud_run_cpu
+          memory = var.cloud_run_memory
+        }
+      }
       env {
         name  = "NODE_ENV"
         value = "production"
@@ -724,14 +867,7 @@ resource "google_cloud_run_v2_service_iam_member" "topi_invokes_bench" {
   name     = google_cloud_run_v2_service.bench_mcp[0].name
   location = var.region
   role     = "roles/run.invoker"
-  member   = "serviceAccount:${var.service_account}"
-}
-
-resource "google_project_iam_member" "topi_vertex" {
-  count   = local.is_rakettitiede ? 1 : 0
-  project = var.project_id
-  role    = "roles/aiplatform.user"
-  member  = "serviceAccount:${var.service_account}"
+  member   = "serviceAccount:${google_service_account.runtime.email}"
 }
 
 resource "google_secret_manager_secret" "topi_bot_token" {
@@ -739,7 +875,11 @@ resource "google_secret_manager_secret" "topi_bot_token" {
   project   = var.project_id
   secret_id = "topi-bot-token"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -748,7 +888,11 @@ resource "google_secret_manager_secret" "topi_signing_secret" {
   project   = var.project_id
   secret_id = "topi-slack-signing-secret"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
@@ -767,7 +911,11 @@ resource "google_secret_manager_secret" "bench_mcp_api_key" {
   project   = var.project_id
   secret_id = "ai-talent-bench-mcp-api-key"
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 

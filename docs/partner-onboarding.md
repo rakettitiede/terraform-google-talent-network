@@ -15,6 +15,8 @@ Deploy Pyry (Slack talent search) and join the Minna federation (cross-company s
 
 Services run on Google Cloud. This phase enables the required APIs and creates a service account for Terraform to manage resources.
 
+The module creates a separate **runtime service account** (`talent-network-runtime`) with minimal permissions for Cloud Run services. The Terraform deployer only needs permissions to create and manage resources.
+
 ```bash
 gcloud config set project YOUR_PROJECT_ID
 
@@ -35,7 +37,7 @@ gcloud iam service-accounts create terraform-deployer \
 SA_EMAIL=terraform-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com
 
 for role in roles/run.admin roles/artifactregistry.admin roles/storage.admin \
-  roles/secretmanager.admin roles/iam.serviceAccountAdmin roles/aiplatform.user \
+  roles/secretmanager.admin roles/iam.serviceAccountAdmin \
   roles/serviceusage.serviceUsageConsumer; do
   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
     --member="serviceAccount:$SA_EMAIL" --role="$role"
@@ -71,7 +73,9 @@ Terraform stores infrastructure state remotely in GCS. This enables team collabo
 
 ```bash
 gcloud storage buckets create gs://YOUR_PROJECT_ID-terraform-state \
-  --location=europe-north1 --uniform-bucket-level-access
+  --location=europe-north1 \
+  --uniform-bucket-level-access \
+  --pap
 ```
 
 ---
@@ -106,7 +110,6 @@ module "ai_talent" {
   version = "~> X.0" # Check registry for latest version
 
   project_id                   = "YOUR_PROJECT_ID"
-  service_account              = "terraform-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com"
   partner                      = "your-partner-id"
   agileday_base_url            = "https://api.agileday.io"
   artifact_registry_project_id = "ai-cv-match-471207" # Rakettitiede's registry
@@ -119,9 +122,10 @@ output "network_mcp_url" { value = module.ai_talent.network_mcp_url }
 
 ```bash
 terraform init
+terraform apply
 ```
 
-The first apply will create Secret Manager secrets, but Cloud Run services require secrets to have at least one version before they can deploy. Initialize the Slack secrets with placeholder values:
+The first apply creates secrets but Cloud Run deployment will fail because secrets have no versions yet. Add placeholder values:
 
 ```bash
 for secret in pyry-bot-token pyry-slack-signing-secret; do
@@ -129,7 +133,7 @@ for secret in pyry-bot-token pyry-slack-signing-secret; do
 done
 ```
 
-Now deploy:
+Apply again to complete Cloud Run deployment:
 
 ```bash
 terraform apply

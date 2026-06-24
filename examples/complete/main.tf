@@ -18,7 +18,6 @@ module "ai_talent" {
 
   # Required
   project_id                   = "your-gcp-project-id"
-  service_account              = "terraform-deployer@your-gcp-project-id.iam.gserviceaccount.com"
   partner                      = "your-company"
   agileday_base_url            = "https://api.agileday.io"
   artifact_registry_project_id = "ai-cv-match-471207" # Rakettitiede's registry
@@ -35,6 +34,19 @@ module "ai_talent" {
     pyry        = "v1.4.4"
     network_mcp = "v0.9.4"
   }
+
+  # Optional: override Cloud Run resource limits (applies to all services)
+  cloud_run_cpu           = "2"
+  cloud_run_memory        = "1Gi"
+  cloud_run_min_instances = 1
+  cloud_run_max_instances = 20
+
+  # Optional: override service names (useful for multi-environment deployments)
+  # service_names = {
+  #   search_mcp  = "prod-mcp-agileday"
+  #   pyry        = "prod-pyry"
+  #   network_mcp = "prod-mcp-talent-network"
+  # }
 
   # Optional: self-host images in your own Artifact Registry (overrides the default above)
   # artifact_registry_project_id = "your-artifact-registry-project"

@@ -12,3 +12,5 @@ crash.*.log
 *.tfplan
 .terraform.lock.hcl
 modules/bootstrap/.terraform.lock.hcl
+scripts/
+CLAUDE.md
