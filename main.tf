@@ -108,6 +108,7 @@ resource "google_storage_bucket" "search_mcp_db" {
   name                        = "${var.project_id}-search-mcp-db"
   location                    = var.region
   uniform_bucket_level_access = true
+  public_access_prevention    = "enforced"
   versioning { enabled = true }
 }
 
@@ -396,6 +397,7 @@ resource "google_storage_bucket" "network_db" {
   name                        = "${var.project_id}-talent-network-db"
   location                    = var.region
   uniform_bucket_level_access = true
+  public_access_prevention    = "enforced"
   versioning { enabled = true }
 }
 

@@ -59,6 +59,7 @@ Each partner's data stays in their own GCP project:
 
 Buckets have:
 - Uniform bucket-level access (no ACLs)
+- Public access prevention enforced
 - Versioning enabled
 - Service account has `storage.objectAdmin`
 
