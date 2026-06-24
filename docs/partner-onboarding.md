@@ -122,9 +122,10 @@ output "network_mcp_url" { value = module.ai_talent.network_mcp_url }
 
 ```bash
 terraform init
+terraform apply
 ```
 
-The first apply will create Secret Manager secrets, but Cloud Run services require secrets to have at least one version before they can deploy. Initialize the Slack secrets with placeholder values:
+The first apply creates secrets but Cloud Run deployment will fail because secrets have no versions yet. Add placeholder values:
 
 ```bash
 for secret in pyry-bot-token pyry-slack-signing-secret; do
@@ -132,7 +133,7 @@ for secret in pyry-bot-token pyry-slack-signing-secret; do
 done
 ```
 
-Now deploy:
+Apply again to complete Cloud Run deployment:
 
 ```bash
 terraform apply
