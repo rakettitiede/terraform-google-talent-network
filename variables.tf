@@ -19,16 +19,6 @@ variable "region" {
   }
 }
 
-variable "service_account" {
-  description = "Service account email for all Cloud Run services. Must have roles: run.admin, artifactregistry.reader, storage.admin, secretmanager.secretAccessor, aiplatform.user."
-  type        = string
-
-  validation {
-    condition     = can(regex("^[a-z][a-z0-9-]*@[a-z][a-z0-9-]*\\.iam\\.gserviceaccount\\.com$", var.service_account))
-    error_message = "Service account must be a valid GCP service account email (name@project.iam.gserviceaccount.com)."
-  }
-}
-
 variable "partner" {
   description = "Partner identifier — unique per company. Used to prefix OpenAPI operationIds and to conditionally deploy Rakettitiede-specific services (Minna, Topi)."
   type        = string

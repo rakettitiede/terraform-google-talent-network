@@ -18,7 +18,6 @@ module "ai_talent" {
 
   # Required
   project_id                   = "your-gcp-project-id"
-  service_account              = "terraform-deployer@your-gcp-project-id.iam.gserviceaccount.com"
   partner                      = "your-company"
   agileday_base_url            = "https://api.agileday.io"
   artifact_registry_project_id = "ai-cv-match-471207" # Rakettitiede's registry

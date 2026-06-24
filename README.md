@@ -43,7 +43,6 @@ module "ai_talent" {
   version = "~> X.0" # Check registry for latest version
 
   project_id                   = "YOUR_PROJECT_ID"
-  service_account              = "terraform-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com"
   partner                      = "your-partner-id"
   agileday_base_url            = "https://api.agileday.io"
   artifact_registry_project_id = "ai-cv-match-471207" # Rakettitiede's registry

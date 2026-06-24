@@ -6,6 +6,29 @@ locals {
   is_rakettitiede = var.partner == "rakettitiede"
 }
 
+# ── Runtime service account ──────────────────────────────────────────────────
+# Minimal permissions for Cloud Run services. Separate from terraform-deployer
+# to reduce blast radius if a service is compromised.
+
+resource "google_service_account" "runtime" {
+  project      = var.project_id
+  account_id   = "talent-network-runtime"
+  display_name = "Talent Network Runtime"
+  description  = "Service account for Cloud Run services with minimal permissions"
+}
+
+resource "google_project_iam_member" "runtime_secret_accessor" {
+  project = var.project_id
+  role    = "roles/secretmanager.secretAccessor"
+  member  = "serviceAccount:${google_service_account.runtime.email}"
+}
+
+resource "google_project_iam_member" "runtime_vertex_user" {
+  project = var.project_id
+  role    = "roles/aiplatform.user"
+  member  = "serviceAccount:${google_service_account.runtime.email}"
+}
+
 # ── Internal search ──────────────────────────────────────────────────────────
 
 resource "google_artifact_registry_repository" "search_mcp" {
@@ -21,7 +44,7 @@ resource "google_cloud_run_v2_service" "search_mcp" {
   location = var.region
 
   template {
-    service_account                  = var.service_account
+    service_account                  = google_service_account.runtime.email
     max_instance_request_concurrency = 80
     scaling {
       min_instance_count = var.cloud_run_min_instances
@@ -127,19 +150,7 @@ resource "google_storage_bucket" "search_mcp_db" {
 resource "google_storage_bucket_iam_member" "search_mcp_db" {
   bucket = google_storage_bucket.search_mcp_db.name
   role   = "roles/storage.objectAdmin"
-  member = "serviceAccount:${var.service_account}"
-}
-
-resource "google_project_iam_member" "search_mcp_vertex" {
-  project = var.project_id
-  role    = "roles/aiplatform.user"
-  member  = "serviceAccount:${var.service_account}"
-}
-
-resource "google_project_iam_member" "secret_accessor" {
-  project = var.project_id
-  role    = "roles/secretmanager.secretAccessor"
-  member  = "serviceAccount:${var.service_account}"
+  member = "serviceAccount:${google_service_account.runtime.email}"
 }
 
 resource "google_secret_manager_secret" "search_mcp_client_id" {
@@ -241,7 +252,7 @@ resource "google_cloud_run_v2_service" "pyry" {
   location = var.region
 
   template {
-    service_account                  = var.service_account
+    service_account                  = google_service_account.runtime.email
     max_instance_request_concurrency = 80
     scaling {
       min_instance_count = var.cloud_run_min_instances
@@ -316,7 +327,7 @@ resource "google_cloud_run_v2_service_iam_member" "pyry_invokes_search_mcp" {
   name     = google_cloud_run_v2_service.search_mcp.name
   location = var.region
   role     = "roles/run.invoker"
-  member   = "serviceAccount:${var.service_account}"
+  member   = "serviceAccount:${google_service_account.runtime.email}"
 }
 
 resource "google_secret_manager_secret" "pyry_bot_token" {
@@ -358,7 +369,7 @@ resource "google_cloud_run_v2_service" "network_mcp" {
   location = var.region
 
   template {
-    service_account                  = var.service_account
+    service_account                  = google_service_account.runtime.email
     max_instance_request_concurrency = 80
     scaling {
       min_instance_count = var.cloud_run_min_instances
@@ -464,7 +475,7 @@ resource "google_storage_bucket" "network_db" {
 resource "google_storage_bucket_iam_member" "network_db" {
   bucket = google_storage_bucket.network_db.name
   role   = "roles/storage.objectAdmin"
-  member = "serviceAccount:${var.service_account}"
+  member = "serviceAccount:${google_service_account.runtime.email}"
 }
 
 resource "google_secret_manager_secret" "network_client_id" {
@@ -544,7 +555,7 @@ resource "google_cloud_run_v2_service" "minna" {
   location = var.region
 
   template {
-    service_account                  = var.service_account
+    service_account                  = google_service_account.runtime.email
     max_instance_request_concurrency = 80
     scaling {
       min_instance_count = var.cloud_run_min_instances
@@ -640,7 +651,7 @@ resource "google_cloud_run_v2_service_iam_member" "minna_invokes_network" {
   name     = google_cloud_run_v2_service.network_mcp.name
   location = var.region
   role     = "roles/run.invoker"
-  member   = "serviceAccount:${var.service_account}"
+  member   = "serviceAccount:${google_service_account.runtime.email}"
 }
 
 resource "google_secret_manager_secret" "minna_bot_token" {
@@ -722,7 +733,7 @@ resource "google_cloud_run_v2_service" "bench_mcp" {
   location = var.region
 
   template {
-    service_account                  = var.service_account
+    service_account                  = google_service_account.runtime.email
     max_instance_request_concurrency = 80
     scaling {
       min_instance_count = var.cloud_run_min_instances
@@ -778,7 +789,7 @@ resource "google_cloud_run_v2_service" "topi" {
   location = var.region
 
   template {
-    service_account                  = var.service_account
+    service_account                  = google_service_account.runtime.email
     max_instance_request_concurrency = 80
     scaling {
       min_instance_count = var.cloud_run_min_instances
@@ -850,14 +861,7 @@ resource "google_cloud_run_v2_service_iam_member" "topi_invokes_bench" {
   name     = google_cloud_run_v2_service.bench_mcp[0].name
   location = var.region
   role     = "roles/run.invoker"
-  member   = "serviceAccount:${var.service_account}"
-}
-
-resource "google_project_iam_member" "topi_vertex" {
-  count   = local.is_rakettitiede ? 1 : 0
-  project = var.project_id
-  role    = "roles/aiplatform.user"
-  member  = "serviceAccount:${var.service_account}"
+  member   = "serviceAccount:${google_service_account.runtime.email}"
 }
 
 resource "google_secret_manager_secret" "topi_bot_token" {
