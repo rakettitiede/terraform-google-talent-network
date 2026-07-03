@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/rakettitiede/terraform-google-talent-network/compare/v0.1.0...v0.1.1) (2026-07-03)
+
+
+### Bug Fixes
+
+* **pyry:** add API_ALLOWED_AUDIENCES for identity token validation ([#13](https://github.com/rakettitiede/terraform-google-talent-network/issues/13)) ([280bcfb](https://github.com/rakettitiede/terraform-google-talent-network/commit/280bcfb84bc4a696abdc84c93c42b7c3ccff0fc7))
+
 ## [0.1.0](https://github.com/rakettitiede/terraform-google-talent-network/compare/v0.0.2...v0.1.0) (2026-06-24)
 
 
