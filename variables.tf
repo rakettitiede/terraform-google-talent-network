@@ -105,3 +105,9 @@ variable "cloud_run_max_instances" {
   type        = number
   default     = 10
 }
+
+variable "pyry_api_allowed_callers" {
+  description = "Comma-separated list of service account emails allowed to call Pyry's /api/query endpoint. Empty value blocks all API calls."
+  type        = string
+  default     = ""
+}
