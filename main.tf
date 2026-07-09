@@ -334,14 +334,6 @@ resource "google_cloud_run_v2_service_iam_member" "pyry_public" {
   member   = "allUsers"
 }
 
-resource "google_cloud_run_v2_service_iam_member" "pyry_invokes_search_mcp" {
-  project  = var.project_id
-  name     = google_cloud_run_v2_service.search_mcp.name
-  location = var.region
-  role     = "roles/run.invoker"
-  member   = "serviceAccount:${google_service_account.runtime.email}"
-}
-
 resource "google_secret_manager_secret" "pyry_bot_token" {
   project   = var.project_id
   secret_id = "pyry-bot-token"
@@ -661,15 +653,6 @@ resource "google_cloud_run_v2_service_iam_member" "minna_public" {
   member   = "allUsers"
 }
 
-resource "google_cloud_run_v2_service_iam_member" "minna_invokes_network" {
-  count    = local.is_rakettitiede ? 1 : 0
-  project  = var.project_id
-  name     = google_cloud_run_v2_service.network_mcp.name
-  location = var.region
-  role     = "roles/run.invoker"
-  member   = "serviceAccount:${google_service_account.runtime.email}"
-}
-
 resource "google_secret_manager_secret" "minna_bot_token" {
   count     = local.is_rakettitiede ? 1 : 0
   project   = var.project_id
@@ -879,15 +862,6 @@ resource "google_cloud_run_v2_service_iam_member" "topi_public" {
   location = var.region
   role     = "roles/run.invoker"
   member   = "allUsers"
-}
-
-resource "google_cloud_run_v2_service_iam_member" "topi_invokes_bench" {
-  count    = local.is_rakettitiede ? 1 : 0
-  project  = var.project_id
-  name     = google_cloud_run_v2_service.bench_mcp[0].name
-  location = var.region
-  role     = "roles/run.invoker"
-  member   = "serviceAccount:${google_service_account.runtime.email}"
 }
 
 resource "google_secret_manager_secret" "topi_bot_token" {
