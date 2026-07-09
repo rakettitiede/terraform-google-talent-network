@@ -61,6 +61,6 @@ terraform apply
 
 ## Documentation
 
-- [Partner Onboarding Guide](docs/partner-onboarding.md) — full setup walkthrough
-- [Security Model](docs/security.md) — IAM, authentication, and data privacy
-- [Examples](examples/) — ready-to-use configurations
+- [Partner Onboarding Guide](https://github.com/rakettitiede/terraform-google-talent-network/blob/main/docs/partner-onboarding.md) — full setup walkthrough
+- [Security Model](https://github.com/rakettitiede/terraform-google-talent-network/blob/main/docs/security.md) — IAM, authentication, and data privacy
+- [Examples](https://github.com/rakettitiede/terraform-google-talent-network/tree/main/examples) — ready-to-use configurations
