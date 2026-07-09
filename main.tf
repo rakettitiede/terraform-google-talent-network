@@ -4,6 +4,7 @@
 
 locals {
   is_rakettitiede = var.partner == "rakettitiede"
+  oauth_enabled   = var.google_oauth != null
 }
 
 # ── Runtime service account ──────────────────────────────────────────────────
@@ -84,21 +85,27 @@ resource "google_cloud_run_v2_service" "search_mcp" {
         name  = "GCP_LOCATION"
         value = var.region
       }
-      env {
-        name = "GOOGLE_CLIENT_ID"
-        value_source {
-          secret_key_ref {
-            secret  = google_secret_manager_secret.search_mcp_client_id.secret_id
-            version = "latest"
+      dynamic "env" {
+        for_each = local.oauth_enabled ? [1] : []
+        content {
+          name = "GOOGLE_CLIENT_ID"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.search_mcp_client_id[0].secret_id
+              version = "latest"
+            }
           }
         }
       }
-      env {
-        name = "GOOGLE_CLIENT_SECRET"
-        value_source {
-          secret_key_ref {
-            secret  = google_secret_manager_secret.search_mcp_client_secret.secret_id
-            version = "latest"
+      dynamic "env" {
+        for_each = local.oauth_enabled ? [1] : []
+        content {
+          name = "GOOGLE_CLIENT_SECRET"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.search_mcp_client_secret[0].secret_id
+              version = "latest"
+            }
           }
         }
       }
@@ -125,8 +132,6 @@ resource "google_cloud_run_v2_service" "search_mcp" {
 
   depends_on = [
     google_project_iam_member.runtime_secret_accessor,
-    google_secret_manager_secret_version.search_mcp_client_id,
-    google_secret_manager_secret_version.search_mcp_client_secret,
     google_secret_manager_secret_version.search_mcp_api_key,
     google_secret_manager_secret_version.partner_secret
   ]
@@ -156,6 +161,7 @@ resource "google_storage_bucket_iam_member" "search_mcp_db" {
 }
 
 resource "google_secret_manager_secret" "search_mcp_client_id" {
+  count     = local.oauth_enabled ? 1 : 0
   project   = var.project_id
   secret_id = "search-mcp-google-client-id"
   replication {
@@ -168,11 +174,13 @@ resource "google_secret_manager_secret" "search_mcp_client_id" {
 }
 
 resource "google_secret_manager_secret_version" "search_mcp_client_id" {
-  secret      = google_secret_manager_secret.search_mcp_client_id.id
-  secret_data = "unused"
+  count       = local.oauth_enabled ? 1 : 0
+  secret      = google_secret_manager_secret.search_mcp_client_id[0].id
+  secret_data = var.google_oauth.client_id
 }
 
 resource "google_secret_manager_secret" "search_mcp_client_secret" {
+  count     = local.oauth_enabled ? 1 : 0
   project   = var.project_id
   secret_id = "search-mcp-google-client-secret"
   replication {
@@ -185,8 +193,9 @@ resource "google_secret_manager_secret" "search_mcp_client_secret" {
 }
 
 resource "google_secret_manager_secret_version" "search_mcp_client_secret" {
-  secret      = google_secret_manager_secret.search_mcp_client_secret.id
-  secret_data = "unused"
+  count       = local.oauth_enabled ? 1 : 0
+  secret      = google_secret_manager_secret.search_mcp_client_secret[0].id
+  secret_data = var.google_oauth.client_secret
 }
 
 resource "random_password" "search_mcp_api_key" {
@@ -413,21 +422,27 @@ resource "google_cloud_run_v2_service" "network_mcp" {
         name  = "AGILEDAY_BASE_URL"
         value = var.agileday_base_url
       }
-      env {
-        name = "GOOGLE_CLIENT_ID"
-        value_source {
-          secret_key_ref {
-            secret  = google_secret_manager_secret.network_client_id.secret_id
-            version = "latest"
+      dynamic "env" {
+        for_each = local.oauth_enabled ? [1] : []
+        content {
+          name = "GOOGLE_CLIENT_ID"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.network_client_id[0].secret_id
+              version = "latest"
+            }
           }
         }
       }
-      env {
-        name = "GOOGLE_CLIENT_SECRET"
-        value_source {
-          secret_key_ref {
-            secret  = google_secret_manager_secret.network_client_secret.secret_id
-            version = "latest"
+      dynamic "env" {
+        for_each = local.oauth_enabled ? [1] : []
+        content {
+          name = "GOOGLE_CLIENT_SECRET"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.network_client_secret[0].secret_id
+              version = "latest"
+            }
           }
         }
       }
@@ -454,8 +469,6 @@ resource "google_cloud_run_v2_service" "network_mcp" {
 
   depends_on = [
     google_project_iam_member.runtime_secret_accessor,
-    google_secret_manager_secret_version.network_client_id,
-    google_secret_manager_secret_version.network_client_secret,
     google_secret_manager_secret_version.network_mcp_api_key,
     google_secret_manager_secret_version.partner_secret
   ]
@@ -485,6 +498,7 @@ resource "google_storage_bucket_iam_member" "network_db" {
 }
 
 resource "google_secret_manager_secret" "network_client_id" {
+  count     = local.oauth_enabled ? 1 : 0
   project   = var.project_id
   secret_id = "talent-network-google-client-id"
   replication {
@@ -497,11 +511,13 @@ resource "google_secret_manager_secret" "network_client_id" {
 }
 
 resource "google_secret_manager_secret_version" "network_client_id" {
-  secret      = google_secret_manager_secret.network_client_id.id
-  secret_data = "unused"
+  count       = local.oauth_enabled ? 1 : 0
+  secret      = google_secret_manager_secret.network_client_id[0].id
+  secret_data = var.google_oauth.client_id
 }
 
 resource "google_secret_manager_secret" "network_client_secret" {
+  count     = local.oauth_enabled ? 1 : 0
   project   = var.project_id
   secret_id = "talent-network-google-client-secret"
   replication {
@@ -514,8 +530,9 @@ resource "google_secret_manager_secret" "network_client_secret" {
 }
 
 resource "google_secret_manager_secret_version" "network_client_secret" {
-  secret      = google_secret_manager_secret.network_client_secret.id
-  secret_data = "unused"
+  count       = local.oauth_enabled ? 1 : 0
+  secret      = google_secret_manager_secret.network_client_secret[0].id
+  secret_data = var.google_oauth.client_secret
 }
 
 resource "random_password" "network_mcp_api_key" {
