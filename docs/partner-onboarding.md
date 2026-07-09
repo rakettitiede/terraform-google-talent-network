@@ -13,9 +13,9 @@ Deploy Pyry (Slack talent search) and join the Minna federation (cross-company s
 
 ## Phase 1: GCP Setup
 
-Services run on Google Cloud. This phase enables the required APIs.
+Services run on Google Cloud. This phase enables required APIs and creates a service account for Terraform.
 
-The module creates a **runtime service account** (`talent-network-runtime`) with minimal permissions for Cloud Run services. You can run Terraform as yourself (via `gcloud auth application-default login`) or create a dedicated service account for CI/CD.
+The module creates a **runtime service account** (`talent-network-runtime`) with minimal permissions for Cloud Run services. You run Terraform by impersonating a dedicated `terraform-deployer` service account — this keeps AR access scoped to the SA, not your personal account.
 
 ```bash
 gcloud config set project YOUR_PROJECT_ID
@@ -29,29 +29,41 @@ gcloud services enable \
   aiplatform.googleapis.com \
   storage.googleapis.com \
   iam.googleapis.com
-```
 
-**Optional: Create a dedicated Terraform service account** (recommended for CI/CD):
-
-```bash
+# Create the terraform-deployer service account
 gcloud iam service-accounts create terraform-deployer \
   --display-name="Terraform Deployer"
 
 SA_EMAIL=terraform-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com
 
+# Grant terraform-deployer the roles it needs
 for role in roles/run.admin roles/storage.admin \
   roles/secretmanager.admin roles/iam.serviceAccountAdmin \
   roles/serviceusage.serviceUsageConsumer; do
   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
     --member="serviceAccount:$SA_EMAIL" --role="$role"
 done
+
+# Grant yourself permission to impersonate terraform-deployer
+gcloud iam service-accounts add-iam-policy-binding $SA_EMAIL \
+  --member="user:YOUR_EMAIL" \
+  --role="roles/iam.serviceAccountTokenCreator"
 ```
 
 ---
 
 ## Phase 2: Request Image Access
 
-Container images are hosted in Rakettitiede's Artifact Registry. Your project's Cloud Run Service Agent needs read access before Terraform can deploy.
+Container images are hosted in Rakettitiede's Artifact Registry. Two identities need read access:
+
+1. **Cloud Run Service Agent** — pulls images at runtime
+2. **terraform-deployer service account** — validates images during `terraform plan/apply`
+
+**Bootstrap the Cloud Run Service Agent** (it doesn't exist until you create it):
+
+```bash
+gcloud beta services identity create --service=run.googleapis.com --project=YOUR_PROJECT_ID
+```
 
 **Get your project number:**
 
@@ -63,8 +75,11 @@ gcloud projects describe YOUR_PROJECT_ID --format="value(projectNumber)"
 
 - Partner identifier (lowercase): e.g., `acme`
 - GCP project number (numeric, e.g., `107604611556`)
+- terraform-deployer email: `terraform-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com`
 
-**What Rakettitiede does:** Grants your Cloud Run Service Agent (`service-PROJECT_NUMBER@serverless-robot-prod.iam.gserviceaccount.com`) the `roles/artifactregistry.reader` role on each container repository. This allows Cloud Run to pull images during deployment.
+**What Rakettitiede does:** Grants `roles/artifactregistry.reader` on each container repository to:
+- Your Cloud Run Service Agent (`service-PROJECT_NUMBER@serverless-robot-prod.iam.gserviceaccount.com`)
+- Your terraform-deployer service account
 
 **Wait for confirmation:** partner ID and image access granted.
 
@@ -79,6 +94,11 @@ gcloud storage buckets create gs://YOUR_PROJECT_ID-terraform-state \
   --location=europe-north1 \
   --uniform-bucket-level-access \
   --pap
+
+# Grant terraform-deployer access to manage state
+gcloud storage buckets add-iam-policy-binding gs://YOUR_PROJECT_ID-terraform-state \
+  --member="serviceAccount:terraform-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/storage.objectAdmin"
 ```
 
 ---
@@ -98,14 +118,16 @@ terraform {
   required_version = ">= 1.7"
 
   backend "gcs" {
-    bucket = "YOUR_STATE_BUCKET"
-    prefix = "talent-network"
+    bucket                      = "YOUR_PROJECT_ID-terraform-state"
+    prefix                      = "talent-network"
+    impersonate_service_account = "terraform-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com"
   }
 }
 
 provider "google" {
-  project = "YOUR_PROJECT_ID"
-  region  = "europe-north1"
+  project                     = "YOUR_PROJECT_ID"
+  region                      = "europe-north1"
+  impersonate_service_account = "terraform-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com"
 }
 
 module "ai_talent" {

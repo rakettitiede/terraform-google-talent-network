@@ -28,14 +28,16 @@ terraform {
   required_version = ">= 1.7"
 
   backend "gcs" {
-    bucket = "YOUR_PROJECT_ID-terraform-state"
-    prefix = "talent-network"
+    bucket                      = "YOUR_PROJECT_ID-terraform-state"
+    prefix                      = "talent-network"
+    impersonate_service_account = "terraform-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com"
   }
 }
 
 provider "google" {
-  project = "YOUR_PROJECT_ID"
-  region  = "europe-north1"
+  project                     = "YOUR_PROJECT_ID"
+  region                      = "europe-north1"
+  impersonate_service_account = "terraform-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com"
 }
 
 module "ai_talent" {
