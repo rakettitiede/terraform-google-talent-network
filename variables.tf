@@ -111,13 +111,3 @@ variable "pyry_api_allowed_callers" {
   type        = string
   default     = ""
 }
-
-variable "google_oauth" {
-  description = "Optional Google OAuth credentials for Custom GPT integration. When provided, OAuth endpoints are enabled on mcp-agileday and mcp-talent-network. When null (default), OAuth is disabled and services use API key authentication only."
-  type = object({
-    client_id     = string
-    client_secret = string
-  })
-  default   = null
-  sensitive = true
-}

@@ -13,9 +13,9 @@ Deploy Pyry (Slack talent search) and join the Minna federation (cross-company s
 
 ## Phase 1: GCP Setup
 
-Services run on Google Cloud. This phase enables the required APIs and creates a service account for Terraform to manage resources.
+Services run on Google Cloud. This phase enables the required APIs.
 
-The module creates a separate **runtime service account** (`talent-network-runtime`) with minimal permissions for Cloud Run services. The Terraform deployer only needs permissions to create and manage resources.
+The module creates a **runtime service account** (`talent-network-runtime`) with minimal permissions for Cloud Run services. You can run Terraform as yourself (via `gcloud auth application-default login`) or create a dedicated service account for CI/CD.
 
 ```bash
 gcloud config set project YOUR_PROJECT_ID
@@ -25,18 +25,21 @@ gcloud services enable serviceusage.googleapis.com
 
 gcloud services enable \
   run.googleapis.com \
-  artifactregistry.googleapis.com \
   secretmanager.googleapis.com \
   aiplatform.googleapis.com \
   storage.googleapis.com \
   iam.googleapis.com
+```
 
+**Optional: Create a dedicated Terraform service account** (recommended for CI/CD):
+
+```bash
 gcloud iam service-accounts create terraform-deployer \
   --display-name="Terraform Deployer"
 
 SA_EMAIL=terraform-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com
 
-for role in roles/run.admin roles/artifactregistry.admin roles/storage.admin \
+for role in roles/run.admin roles/storage.admin \
   roles/secretmanager.admin roles/iam.serviceAccountAdmin \
   roles/serviceusage.serviceUsageConsumer; do
   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
