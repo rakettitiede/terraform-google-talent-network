@@ -124,6 +124,7 @@ resource "google_cloud_run_v2_service" "search_mcp" {
   }
 
   depends_on = [
+    google_project_iam_member.runtime_secret_accessor,
     google_secret_manager_secret_version.search_mcp_client_id,
     google_secret_manager_secret_version.search_mcp_client_secret,
     google_secret_manager_secret_version.search_mcp_api_key,
@@ -319,6 +320,7 @@ resource "google_cloud_run_v2_service" "pyry" {
   }
 
   depends_on = [
+    google_project_iam_member.runtime_secret_accessor,
     google_secret_manager_secret.pyry_bot_token,
     google_secret_manager_secret.pyry_signing_secret
   ]
@@ -459,6 +461,7 @@ resource "google_cloud_run_v2_service" "network_mcp" {
   }
 
   depends_on = [
+    google_project_iam_member.runtime_secret_accessor,
     google_secret_manager_secret_version.network_client_id,
     google_secret_manager_secret_version.network_client_secret,
     google_secret_manager_secret_version.network_mcp_api_key,
@@ -644,6 +647,7 @@ resource "google_cloud_run_v2_service" "minna" {
   }
 
   depends_on = [
+    google_project_iam_member.runtime_secret_accessor,
     google_secret_manager_secret_version.minna_mcp_api_urls
   ]
 }
@@ -776,6 +780,10 @@ resource "google_cloud_run_v2_service" "bench_mcp" {
       }
     }
   }
+
+  depends_on = [
+    google_project_iam_member.runtime_secret_accessor
+  ]
 }
 
 resource "google_cloud_run_v2_service_iam_member" "bench_mcp_public" {
@@ -858,6 +866,10 @@ resource "google_cloud_run_v2_service" "topi" {
       }
     }
   }
+
+  depends_on = [
+    google_project_iam_member.runtime_secret_accessor
+  ]
 }
 
 resource "google_cloud_run_v2_service_iam_member" "topi_public" {
