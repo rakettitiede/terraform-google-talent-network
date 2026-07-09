@@ -308,8 +308,12 @@ resource "google_cloud_run_v2_service" "pyry" {
         }
       }
       env {
-        name  = "API_ALLOWED_AUDIENCES"
+        name  = "PYRY_URL"
         value = google_cloud_run_v2_service.pyry.uri
+      }
+      env {
+        name  = "API_ALLOWED_CALLERS"
+        value = var.pyry_api_allowed_callers
       }
     }
   }
