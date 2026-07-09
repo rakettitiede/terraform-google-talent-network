@@ -32,13 +32,6 @@ resource "google_project_iam_member" "runtime_vertex_user" {
 
 # ── Internal search ──────────────────────────────────────────────────────────
 
-resource "google_artifact_registry_repository" "search_mcp" {
-  project       = var.project_id
-  repository_id = var.service_names.search_mcp
-  format        = "DOCKER"
-  location      = var.region
-}
-
 resource "google_cloud_run_v2_service" "search_mcp" {
   project             = var.project_id
   name                = var.service_names.search_mcp
@@ -250,13 +243,6 @@ resource "google_secret_manager_secret_version" "partner_secret" {
 
 # ── Pyry (internal Slack bot) ─────────────────────────────────────────────────
 
-resource "google_artifact_registry_repository" "pyry" {
-  project       = var.project_id
-  repository_id = var.service_names.pyry
-  format        = "DOCKER"
-  location      = var.region
-}
-
 resource "google_cloud_run_v2_service" "pyry" {
   project             = var.project_id
   name                = var.service_names.pyry
@@ -368,13 +354,6 @@ resource "google_secret_manager_secret" "pyry_signing_secret" {
 }
 
 # ── Federation node ───────────────────────────────────────────────────────────
-
-resource "google_artifact_registry_repository" "network_mcp" {
-  project       = var.project_id
-  repository_id = var.service_names.network_mcp
-  format        = "DOCKER"
-  location      = var.region
-}
 
 resource "google_cloud_run_v2_service" "network_mcp" {
   project             = var.project_id
