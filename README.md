@@ -24,6 +24,12 @@ For full setup instructions including GCP setup, Slack app configuration, and fe
 
 **main.tf:**
 ```hcl
+locals {
+  project_id         = "YOUR_PROJECT_ID"
+  region             = "europe-north1"
+  deployer_sa_email  = "terraform-deployer@${local.project_id}.iam.gserviceaccount.com"
+}
+
 terraform {
   required_version = ">= 1.7"
 
@@ -34,17 +40,29 @@ terraform {
   }
 }
 
+# Default provider for other infrastructure (optional)
 provider "google" {
-  project                     = "YOUR_PROJECT_ID"
-  region                      = "europe-north1"
-  impersonate_service_account = "terraform-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com"
+  project = local.project_id
+  region  = local.region
+}
+
+# Provider with impersonation for the talent-network module
+provider "google" {
+  alias                       = "deployer"
+  project                     = local.project_id
+  region                      = local.region
+  impersonate_service_account = local.deployer_sa_email
 }
 
 module "ai_talent" {
   source  = "rakettitiede/talent-network/google"
   version = "~> X.0" # Check registry for latest version
 
-  project_id                   = "YOUR_PROJECT_ID"
+  providers = {
+    google = google.deployer
+  }
+
+  project_id                   = local.project_id
   partner                      = "your-partner-id"
   agileday_base_url            = "https://api.agileday.io"
   artifact_registry_project_id = "ai-cv-match-471207" # Rakettitiede's registry
