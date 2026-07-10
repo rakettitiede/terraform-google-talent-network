@@ -28,7 +28,8 @@ gcloud services enable \
   secretmanager.googleapis.com \
   aiplatform.googleapis.com \
   storage.googleapis.com \
-  iam.googleapis.com
+  iam.googleapis.com \
+  cloudresourcemanager.googleapis.com
 
 # Create the terraform-deployer service account
 gcloud iam service-accounts create terraform-deployer \
