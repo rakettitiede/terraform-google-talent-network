@@ -111,3 +111,9 @@ variable "pyry_api_allowed_callers" {
   type        = string
   default     = ""
 }
+
+variable "pyry_url" {
+  description = "Pyry's Cloud Run URL for API identity token validation. Leave empty on first deploy, then set to pyry_url output and redeploy."
+  type        = string
+  default     = ""
+}

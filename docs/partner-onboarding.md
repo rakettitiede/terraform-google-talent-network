@@ -288,3 +288,5 @@ curl -X POST "$(terraform output -raw search_mcp_url)/api/v1/refresh" \
 ```
 
 **Update versions:** Edit image_tags, run `terraform apply`.
+
+**Pyry API endpoint:** The Slack bot works without additional configuration. If external services need to call Pyry's `/api/query` programmatically, set `pyry_url` (from `terraform output -raw pyry_url`) and `pyry_api_allowed_callers` in your tfvars, then redeploy.

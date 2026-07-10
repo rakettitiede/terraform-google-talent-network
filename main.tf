@@ -242,7 +242,7 @@ resource "google_cloud_run_v2_service" "pyry" {
       }
       env {
         name  = "PYRY_URL"
-        value = google_cloud_run_v2_service.pyry.uri
+        value = var.pyry_url
       }
       env {
         name  = "API_ALLOWED_CALLERS"
