@@ -32,9 +32,9 @@ variable "partner" {
 variable "image_tags" {
   description = "Per-service Docker image tags. Defaults match this module version. Override to pin specific releases."
   type = object({
-    search_mcp  = optional(string, "v3.13.1")
-    pyry        = optional(string, "v1.5.0")
-    network_mcp = optional(string, "v0.10.0")
+    search_mcp  = optional(string, "v3.14.1")
+    pyry        = optional(string, "v1.9.0")
+    network_mcp = optional(string, "v0.11.1")
     minna       = optional(string, "v1.9.2")
     bench_mcp   = optional(string, "v1.5.0")
     topi        = optional(string, "v1.5.0")
