@@ -91,9 +91,9 @@ The module creates a `talent-network-runtime` service account with minimal permi
 
 This minimizes blast radius — if a Cloud Run service is compromised, the attacker only has read access to secrets and data buckets, not admin access to create/delete resources.
 
-### Terraform Deployer (optional, provided by user)
+### Terraform Deployer (recommended)
 
-You can run Terraform as yourself via `gcloud auth application-default login`, or create a dedicated service account for CI/CD pipelines:
+The recommended approach is to create a `terraform-deployer` service account and run Terraform via impersonation. This keeps Artifact Registry access scoped to the SA (not your personal account) and enables CI/CD pipelines:
 
 | Role | Purpose |
 |------|---------|
