@@ -40,7 +40,7 @@ SA_EMAIL=terraform-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com
 # Grant terraform-deployer the roles it needs
 for role in roles/run.admin roles/storage.admin \
   roles/secretmanager.admin roles/iam.serviceAccountAdmin \
-  roles/serviceusage.serviceUsageConsumer \
+  roles/iam.serviceAccountUser roles/serviceusage.serviceUsageConsumer \
   roles/resourcemanager.projectIamAdmin; do
   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
     --member="serviceAccount:$SA_EMAIL" --role="$role"
