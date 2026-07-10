@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.2.0](https://github.com/rakettitiede/terraform-google-talent-network/compare/v0.1.1...v0.2.0) (2026-07-10)
+
+
+### ⚠ BREAKING CHANGES
+
+* **cloud-run:** Existing deployments must remove these from state:   terraform state rm 'module.ai_talent.google_artifact_registry_repository.search_mcp'   terraform state rm 'module.ai_talent.google_artifact_registry_repository.pyry'   terraform state rm 'module.ai_talent.google_artifact_registry_repository.network_mcp'
+
+### Features
+
+* **pyry:** add service account allowlist for /api/query ([#15](https://github.com/rakettitiede/terraform-google-talent-network/issues/15)) ([4888fbc](https://github.com/rakettitiede/terraform-google-talent-network/commit/4888fbc839eadd815bb6a0f9a70bc04846fddaed))
+
+
+### Bug Fixes
+
+* **cloud-run:** add IAM depends_on to prevent race conditions ([#17](https://github.com/rakettitiede/terraform-google-talent-network/issues/17)) ([e9b2d21](https://github.com/rakettitiede/terraform-google-talent-network/commit/e9b2d21d4f5ea3656a5cb820ec719e0ceaa59012))
+
 ## [0.1.1](https://github.com/rakettitiede/terraform-google-talent-network/compare/v0.1.0...v0.1.1) (2026-07-03)
 
 
