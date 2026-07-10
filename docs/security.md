@@ -101,7 +101,9 @@ You can run Terraform as yourself via `gcloud auth application-default login`, o
 | `roles/storage.admin` | Create and manage GCS buckets |
 | `roles/secretmanager.admin` | Create and manage secrets |
 | `roles/iam.serviceAccountAdmin` | Create runtime service account |
+| `roles/iam.serviceAccountUser` | Deploy Cloud Run with runtime SA |
 | `roles/serviceusage.serviceUsageConsumer` | Enable GCP APIs |
+| `roles/resourcemanager.projectIamAdmin` | Manage project IAM bindings |
 
 Note: `roles/artifactregistry.admin` is **not** required — images are pulled from Rakettitiede's registry, and Cloud Run Service Agent access is granted during partner onboarding (Phase 2).
 
