@@ -256,6 +256,15 @@ DM Pyry in Slack: "Find a senior React developer"
 
 Your federation node allows Minna to include your consultants in cross-company searches. Minna returns anonymized results to protect consultant identity across companies.
 
+**Initialize the federation database** (same AgileDay token as Phase 6):
+
+```bash
+API_KEY=$(gcloud secrets versions access latest --secret=ai-talent-network-mcp-api-key)
+curl -X POST "$(terraform output -raw network_mcp_url)/api/v1/refresh" \
+  -H "X-API-Key: $API_KEY" -H "Content-Type: application/json" \
+  -d '{"token": "YOUR_AGILEDAY_TOKEN"}'
+```
+
 **Contact Rakettitiede (via Slack) with your network URL:**
 
 ```bash
@@ -280,11 +289,18 @@ Test Minna: "Find a consultant with Kubernetes experience"
 
 ## Maintenance
 
-**Refresh database** (run periodically to sync new consultants and profile updates):
+**Refresh databases** (run periodically to sync new consultants and profile updates):
 
 ```bash
+# Refresh Pyry's search database
 API_KEY=$(gcloud secrets versions access latest --secret=ai-talent-search-mcp-api-key)
 curl -X POST "$(terraform output -raw search_mcp_url)/api/v1/refresh" \
+  -H "X-API-Key: $API_KEY" -H "Content-Type: application/json" \
+  -d '{"token": "FRESH_AGILEDAY_TOKEN"}'
+
+# Refresh federation node database (if using Minna)
+API_KEY=$(gcloud secrets versions access latest --secret=ai-talent-network-mcp-api-key)
+curl -X POST "$(terraform output -raw network_mcp_url)/api/v1/refresh" \
   -H "X-API-Key: $API_KEY" -H "Content-Type: application/json" \
   -d '{"token": "FRESH_AGILEDAY_TOKEN"}'
 ```
