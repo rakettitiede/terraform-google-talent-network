@@ -13,9 +13,9 @@ Deploy Pyry (Slack talent search) and join the Minna federation (cross-company s
 
 ## Phase 1: GCP Setup
 
-Services run on Google Cloud. This phase enables the required APIs and creates a service account for Terraform to manage resources.
+Services run on Google Cloud. This phase enables required APIs and creates a service account for Terraform.
 
-The module creates a separate **runtime service account** (`talent-network-runtime`) with minimal permissions for Cloud Run services. The Terraform deployer only needs permissions to create and manage resources.
+The module creates a **runtime service account** (`talent-network-runtime`) with minimal permissions for Cloud Run services. You run Terraform by impersonating a dedicated `terraform-deployer` service account — this keeps AR access scoped to the SA, not your personal account.
 
 ```bash
 gcloud config set project YOUR_PROJECT_ID
@@ -25,30 +25,47 @@ gcloud services enable serviceusage.googleapis.com
 
 gcloud services enable \
   run.googleapis.com \
-  artifactregistry.googleapis.com \
   secretmanager.googleapis.com \
   aiplatform.googleapis.com \
   storage.googleapis.com \
-  iam.googleapis.com
+  iam.googleapis.com \
+  cloudresourcemanager.googleapis.com
 
+# Create the terraform-deployer service account
 gcloud iam service-accounts create terraform-deployer \
   --display-name="Terraform Deployer"
 
 SA_EMAIL=terraform-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com
 
-for role in roles/run.admin roles/artifactregistry.admin roles/storage.admin \
+# Grant terraform-deployer the roles it needs
+for role in roles/run.admin roles/storage.admin \
   roles/secretmanager.admin roles/iam.serviceAccountAdmin \
-  roles/serviceusage.serviceUsageConsumer; do
+  roles/iam.serviceAccountUser roles/serviceusage.serviceUsageConsumer \
+  roles/resourcemanager.projectIamAdmin; do
   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
     --member="serviceAccount:$SA_EMAIL" --role="$role"
 done
+
+# Grant yourself permission to impersonate terraform-deployer
+gcloud iam service-accounts add-iam-policy-binding $SA_EMAIL \
+  --member="user:YOUR_EMAIL" \
+  --role="roles/iam.serviceAccountTokenCreator"
 ```
 
 ---
 
 ## Phase 2: Request Image Access
 
-Container images are hosted in Rakettitiede's Artifact Registry. Your project's Cloud Run Service Agent needs read access before Terraform can deploy.
+Container images are hosted in Rakettitiede's Artifact Registry. Two identities need read access:
+
+1. **Cloud Run Service Agent** — pulls images at runtime
+2. **terraform-deployer service account** — validates images during `terraform plan/apply`
+
+**Bootstrap the Cloud Run Service Agent** (it doesn't exist until you create it):
+
+```bash
+gcloud beta services identity create --service=run.googleapis.com --project=YOUR_PROJECT_ID
+```
 
 **Get your project number:**
 
@@ -60,8 +77,11 @@ gcloud projects describe YOUR_PROJECT_ID --format="value(projectNumber)"
 
 - Partner identifier (lowercase): e.g., `acme`
 - GCP project number (numeric, e.g., `107604611556`)
+- terraform-deployer email: `terraform-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com`
 
-**What Rakettitiede does:** Grants your Cloud Run Service Agent (`service-PROJECT_NUMBER@serverless-robot-prod.iam.gserviceaccount.com`) the `roles/artifactregistry.reader` role on each container repository. This allows Cloud Run to pull images during deployment.
+**What Rakettitiede does:** Grants `roles/artifactregistry.reader` on each container repository to:
+- Your Cloud Run Service Agent (`service-PROJECT_NUMBER@serverless-robot-prod.iam.gserviceaccount.com`)
+- Your terraform-deployer service account
 
 **Wait for confirmation:** partner ID and image access granted.
 
@@ -76,6 +96,11 @@ gcloud storage buckets create gs://YOUR_PROJECT_ID-terraform-state \
   --location=europe-north1 \
   --uniform-bucket-level-access \
   --pap
+
+# Grant terraform-deployer access to manage state
+gcloud storage buckets add-iam-policy-binding gs://YOUR_PROJECT_ID-terraform-state \
+  --member="serviceAccount:terraform-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/storage.objectAdmin"
 ```
 
 ---
@@ -91,25 +116,45 @@ mkdir talent-network && cd talent-network
 **main.tf:**
 
 ```hcl
+locals {
+  project_id         = "YOUR_PROJECT_ID"
+  region             = "europe-north1"
+  deployer_sa_email  = "terraform-deployer@${local.project_id}.iam.gserviceaccount.com"
+}
+
 terraform {
   required_version = ">= 1.7"
 
   backend "gcs" {
-    bucket = "YOUR_STATE_BUCKET"
-    prefix = "talent-network"
+    bucket                      = "YOUR_PROJECT_ID-terraform-state"
+    prefix                      = "talent-network"
+    impersonate_service_account = "terraform-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com"
   }
 }
 
+# Default provider for other infrastructure (optional)
 provider "google" {
-  project = "YOUR_PROJECT_ID"
-  region  = "europe-north1"
+  project = local.project_id
+  region  = local.region
+}
+
+# Provider with impersonation for the talent-network module
+provider "google" {
+  alias                       = "deployer"
+  project                     = local.project_id
+  region                      = local.region
+  impersonate_service_account = local.deployer_sa_email
 }
 
 module "ai_talent" {
   source  = "rakettitiede/talent-network/google"
   version = "~> X.0" # Check registry for latest version
 
-  project_id                   = "YOUR_PROJECT_ID"
+  providers = {
+    google = google.deployer
+  }
+
+  project_id                   = local.project_id
   partner                      = "your-partner-id"
   agileday_base_url            = "https://api.agileday.io"
   artifact_registry_project_id = "ai-cv-match-471207" # Rakettitiede's registry
@@ -211,6 +256,15 @@ DM Pyry in Slack: "Find a senior React developer"
 
 Your federation node allows Minna to include your consultants in cross-company searches. Minna returns anonymized results to protect consultant identity across companies.
 
+**Initialize the federation database** (same AgileDay token as Phase 6):
+
+```bash
+API_KEY=$(gcloud secrets versions access latest --secret=ai-talent-network-mcp-api-key)
+curl -X POST "$(terraform output -raw network_mcp_url)/api/v1/refresh" \
+  -H "X-API-Key: $API_KEY" -H "Content-Type: application/json" \
+  -d '{"token": "YOUR_AGILEDAY_TOKEN"}'
+```
+
 **Contact Rakettitiede (via Slack) with your network URL:**
 
 ```bash
@@ -235,13 +289,22 @@ Test Minna: "Find a consultant with Kubernetes experience"
 
 ## Maintenance
 
-**Refresh database** (run periodically to sync new consultants and profile updates):
+**Refresh databases** (run periodically to sync new consultants and profile updates):
 
 ```bash
+# Refresh Pyry's search database
 API_KEY=$(gcloud secrets versions access latest --secret=ai-talent-search-mcp-api-key)
 curl -X POST "$(terraform output -raw search_mcp_url)/api/v1/refresh" \
+  -H "X-API-Key: $API_KEY" -H "Content-Type: application/json" \
+  -d '{"token": "FRESH_AGILEDAY_TOKEN"}'
+
+# Refresh federation node database (if using Minna)
+API_KEY=$(gcloud secrets versions access latest --secret=ai-talent-network-mcp-api-key)
+curl -X POST "$(terraform output -raw network_mcp_url)/api/v1/refresh" \
   -H "X-API-Key: $API_KEY" -H "Content-Type: application/json" \
   -d '{"token": "FRESH_AGILEDAY_TOKEN"}'
 ```
 
 **Update versions:** Edit image_tags, run `terraform apply`.
+
+**Pyry API endpoint:** The Slack bot works without additional configuration. If external services need to call Pyry's `/api/query` programmatically, set `pyry_url` (from `terraform output -raw pyry_url`) and `pyry_api_allowed_callers` in your tfvars, then redeploy.

@@ -1,29 +1,47 @@
+locals {
+  project_id        = "YOUR_PROJECT_ID"
+  region            = "europe-west1" # Override default europe-north1
+  deployer_sa_email = "terraform-deployer@${local.project_id}.iam.gserviceaccount.com"
+}
+
 terraform {
   required_version = ">= 1.7"
 
   backend "gcs" {
-    bucket = "YOUR_PROJECT_ID-terraform-state"
-    prefix = "talent-network"
+    bucket                      = "YOUR_PROJECT_ID-terraform-state"
+    prefix                      = "talent-network"
+    impersonate_service_account = "terraform-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com"
   }
 }
 
 provider "google" {
-  project = "YOUR_PROJECT_ID"
-  region  = "europe-north1"
+  project = local.project_id
+  region  = local.region
+}
+
+provider "google" {
+  alias                       = "deployer"
+  project                     = local.project_id
+  region                      = local.region
+  impersonate_service_account = local.deployer_sa_email
 }
 
 module "ai_talent" {
   source  = "rakettitiede/talent-network/google"
   version = "~> 0.0"
 
+  providers = {
+    google = google.deployer
+  }
+
   # Required
-  project_id                   = "your-gcp-project-id"
+  project_id                   = local.project_id
   partner                      = "your-company"
   agileday_base_url            = "https://api.agileday.io"
   artifact_registry_project_id = "ai-cv-match-471207" # Rakettitiede's registry
 
   # Optional: override region (default: europe-north1)
-  region = "europe-west1"
+  region = local.region
 
   # Optional: override LLM model for Slack bots (default: gemini-3.5-flash)
   llm_model = "gemini-2.0-flash"

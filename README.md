@@ -24,25 +24,45 @@ For full setup instructions including GCP setup, Slack app configuration, and fe
 
 **main.tf:**
 ```hcl
+locals {
+  project_id         = "YOUR_PROJECT_ID"
+  region             = "europe-north1"
+  deployer_sa_email  = "terraform-deployer@${local.project_id}.iam.gserviceaccount.com"
+}
+
 terraform {
   required_version = ">= 1.7"
 
   backend "gcs" {
-    bucket = "YOUR_PROJECT_ID-terraform-state"
-    prefix = "talent-network"
+    bucket                      = "YOUR_PROJECT_ID-terraform-state"
+    prefix                      = "talent-network"
+    impersonate_service_account = "terraform-deployer@YOUR_PROJECT_ID.iam.gserviceaccount.com"
   }
 }
 
+# Default provider for other infrastructure (optional)
 provider "google" {
-  project = "YOUR_PROJECT_ID"
-  region  = "europe-north1"
+  project = local.project_id
+  region  = local.region
+}
+
+# Provider with impersonation for the talent-network module
+provider "google" {
+  alias                       = "deployer"
+  project                     = local.project_id
+  region                      = local.region
+  impersonate_service_account = local.deployer_sa_email
 }
 
 module "ai_talent" {
   source  = "rakettitiede/talent-network/google"
   version = "~> X.0" # Check registry for latest version
 
-  project_id                   = "YOUR_PROJECT_ID"
+  providers = {
+    google = google.deployer
+  }
+
+  project_id                   = local.project_id
   partner                      = "your-partner-id"
   agileday_base_url            = "https://api.agileday.io"
   artifact_registry_project_id = "ai-cv-match-471207" # Rakettitiede's registry
@@ -61,6 +81,6 @@ terraform apply
 
 ## Documentation
 
-- [Partner Onboarding Guide](docs/partner-onboarding.md) — full setup walkthrough
-- [Security Model](docs/security.md) — IAM, authentication, and data privacy
-- [Examples](examples/) — ready-to-use configurations
+- [Partner Onboarding Guide](https://github.com/rakettitiede/terraform-google-talent-network/blob/main/docs/partner-onboarding.md) — full setup walkthrough
+- [Security Model](https://github.com/rakettitiede/terraform-google-talent-network/blob/main/docs/security.md) — IAM, authentication, and data privacy
+- [Examples](https://github.com/rakettitiede/terraform-google-talent-network/tree/main/examples) — ready-to-use configurations

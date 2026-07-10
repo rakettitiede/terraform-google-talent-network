@@ -32,9 +32,9 @@ variable "partner" {
 variable "image_tags" {
   description = "Per-service Docker image tags. Defaults match this module version. Override to pin specific releases."
   type = object({
-    search_mcp  = optional(string, "v3.13.1")
-    pyry        = optional(string, "v1.5.0")
-    network_mcp = optional(string, "v0.10.0")
+    search_mcp  = optional(string, "v3.14.1")
+    pyry        = optional(string, "v1.9.0")
+    network_mcp = optional(string, "v0.11.1")
     minna       = optional(string, "v1.9.2")
     bench_mcp   = optional(string, "v1.5.0")
     topi        = optional(string, "v1.5.0")
@@ -108,6 +108,12 @@ variable "cloud_run_max_instances" {
 
 variable "pyry_api_allowed_callers" {
   description = "Comma-separated list of service account emails allowed to call Pyry's /api/query endpoint. Empty value blocks all API calls."
+  type        = string
+  default     = ""
+}
+
+variable "pyry_url" {
+  description = "Pyry's Cloud Run URL for API identity token validation. Leave empty on first deploy, then set to pyry_url output and redeploy."
   type        = string
   default     = ""
 }

@@ -79,21 +79,7 @@ Rakettitiede does not have access to partner consultant databases — only the a
 
 ## IAM Roles
 
-The module uses two service accounts with separated concerns:
-
-### Terraform Deployer (provided by user)
-
-Used only during `terraform apply` to create and manage resources:
-
-| Role | Purpose |
-|------|---------|
-| `roles/run.admin` | Deploy and manage Cloud Run services |
-| `roles/artifactregistry.admin` | Create Artifact Registry repositories |
-| `roles/storage.admin` | Create and manage GCS buckets |
-| `roles/secretmanager.admin` | Create and manage secrets |
-| `roles/iam.serviceAccountAdmin` | Create runtime service account |
-
-### Runtime (created by module)
+### Runtime Service Account (created by module)
 
 The module creates a `talent-network-runtime` service account with minimal permissions for Cloud Run services:
 
@@ -103,7 +89,23 @@ The module creates a `talent-network-runtime` service account with minimal permi
 | `roles/aiplatform.user` | Access Vertex AI for embeddings/LLM |
 | `roles/storage.objectAdmin` | Read/write data buckets (scoped per bucket) |
 
-This separation reduces blast radius — if a Cloud Run service is compromised, the attacker only has read access to secrets and data buckets, not admin access to create/delete resources.
+This minimizes blast radius — if a Cloud Run service is compromised, the attacker only has read access to secrets and data buckets, not admin access to create/delete resources.
+
+### Terraform Deployer (recommended)
+
+The recommended approach is to create a `terraform-deployer` service account and run Terraform via impersonation. This keeps Artifact Registry access scoped to the SA (not your personal account) and enables CI/CD pipelines:
+
+| Role | Purpose |
+|------|---------|
+| `roles/run.admin` | Deploy and manage Cloud Run services |
+| `roles/storage.admin` | Create and manage GCS buckets |
+| `roles/secretmanager.admin` | Create and manage secrets |
+| `roles/iam.serviceAccountAdmin` | Create runtime service account |
+| `roles/iam.serviceAccountUser` | Deploy Cloud Run with runtime SA |
+| `roles/serviceusage.serviceUsageConsumer` | Enable GCP APIs |
+| `roles/resourcemanager.projectIamAdmin` | Manage project IAM bindings |
+
+Note: `roles/artifactregistry.admin` is **not** required — images are pulled from Rakettitiede's registry, and Cloud Run Service Agent access is granted during partner onboarding (Phase 2).
 
 ## Recommendations
 
